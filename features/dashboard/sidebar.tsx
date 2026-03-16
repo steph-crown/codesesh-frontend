@@ -26,10 +26,7 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useSessions, useUser } from "@/hooks/use-sessions";
 import { cn } from "@/lib/utils";
@@ -109,16 +106,15 @@ export function Sidebar() {
               alt=""
               width={18}
               height={18}
-              className={cn(
-                "transition-transform",
-                collapsed && "rotate-180",
-              )}
+              className={cn("transition-transform", collapsed && "rotate-180")}
             />
           </button>
         </div>
 
         {/* Actions */}
-        <div className={cn("flex flex-col gap-1 p-2", collapsed && "items-center")}>
+        <div
+          className={cn("flex flex-col gap-1 p-2", collapsed && "items-center")}
+        >
           <button
             onClick={() => setCreateOpen(true)}
             className={cn(
@@ -154,7 +150,7 @@ export function Sidebar() {
         {/* Recent sessions */}
         {!collapsed && (
           <div className="flex-1 overflow-y-auto px-2 pt-2">
-            <p className="px-2.5 pb-2 text-xs font-medium text-[#9CA3AF] uppercase tracking-wider">
+            <p className="px-2.5 pb-2 text-[10px] font-medium text-[#9CA3AF] uppercase tracking-wider">
               Recent sessions
             </p>
             <div className="flex flex-col gap-0.5">
@@ -196,7 +192,8 @@ export function Sidebar() {
                 {user.username}
               </p>
               <p className="text-xs text-[#9CA3AF]">
-                {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
+                {sessions.length}{" "}
+                {sessions.length === 1 ? "session" : "sessions"}
               </p>
             </div>
           )}
