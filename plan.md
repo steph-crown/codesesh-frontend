@@ -21,7 +21,7 @@ CodeSesh is a frontend-only Next.js app for a realtime collaborative coding expe
 - **Similar product:** Replit and LeetCode coding UIs, but scoped to a single shared file per session.
 - **Priority screens:** Landing page, session list, individual session editor surface with presence + connection state.
 - **Tests expected:** Nice to have (component-level where easy); working, polished UI is the priority.
-- **Other constraints:** Frontend only, built with Next.js App Router, shadcn/ui, Tailwind, Monaco; primary brand color is `#ff3c00` (orange) and font is Figtree.
+- **Other constraints:** Frontend only, built with Next.js App Router + React 19, shadcn/ui, Tailwind v4, Monaco; managed with pnpm; primary brand color is `#ff3c00` (orange) and the only font is Figtree.
 
 ## 3. What I Am Building
 
@@ -41,10 +41,10 @@ CodeSesh is a Next.js frontend for a realtime collaborative code editor. A devel
 
 | Tool                                                  | Why                                                                                     |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Next.js (App Router) + React 18 + TypeScript (strict) | File-system routing, good DX, easy deployment and SSR/ISR if needed                     |
-| Tailwind CSS                                          | Utility-first styling, fast iteration on layout + dark theme                            |
+| Next.js (App Router) + React 19 + TypeScript (strict) | File-system routing, good DX, easy deployment and SSR/ISR if needed                     |
+| Tailwind CSS v4 (config in `app/globals.css`)         | Utility-first styling; no tailwind.config.ts — tokens defined via `@theme inline`      |
 | shadcn/ui                                             | Accessible, headless-ish UI components as a base for our custom dark, Replit-like shell |
-| `next/font` with Figtree                              | First-class font loading, no FOUT, Figtree as the single brand typeface                 |
+| `next/font` with Figtree (only)                       | First-class font loading, no FOUT, Figtree is the only typeface — no Geist             |
 | Monaco editor (`@monaco-editor/react` or similar)     | Mature, familiar code editor surface with good TypeScript support                       |
 | React Query                                           | For HTTP APIs and any non-WebSocket async data, with caching and loading states         |
 | Lightweight WebSocket client utilities                | Encapsulate connection/reconnect logic and message typing                               |
@@ -102,28 +102,39 @@ Style: minimal, content-first, no heavy gradients, subtle shadows, strong typogr
 <!-- 🤖 CURSOR GENERATES THIS — you curate/adjust -->
 
 ```
-src/
-  app/                              # Pages — mirrors route structure
-    [FILL: page]/page.tsx           # [FILL: description]
-    [FILL: page]/page.tsx           # [FILL: description]
-    layout.tsx                      # Shared layout with navigation
-  features/                         # Feature modules
-    [FILL: feature-name]/
-      components/                   # UI components for this feature
-      hooks/                        # Custom hooks for this feature
-      types/                        # TypeScript types
-      constants.ts                  # Mock data, magic strings, config values
-    [FILL: feature-name]/
-      components/
-      hooks/
-      types/
-      constants.ts
-  components/                       # Shared/global components (Navbar, Footer, etc.)
-  lib/                              # Utilities, helpers
-  routes/                           # Route configuration
+app/                                # Next.js App Router — mirrors route structure
+  (landing)/                        # Route group for landing page
+    page.tsx                        # Landing page: / 
+  sessions/
+    page.tsx                        # Session list: /sessions
+    [sessionId]/
+      page.tsx                      # Session editor: /sessions/[sessionId]
+  layout.tsx                        # Root layout (Figtree font, metadata)
+  globals.css                       # Tailwind v4 @theme tokens + CSS variables
+features/                           # Feature modules (co-located logic per feature)
+  landing/
+    components/                     # Landing-specific UI components
+    hooks/                          # Landing-specific hooks
+    types/                          # TypeScript types
+    constants.ts                    # Magic strings, config values
+  sessions/
+    components/
+    hooks/
+    types/
+    constants.ts
+  editor/
+    components/
+    hooks/
+    types/
+    constants.ts
+components/                         # Shared/global components (Logo, Navbar, etc.)
+  ui/                               # shadcn/ui primitives
+lib/                                # Utilities and helpers (cn, ws, storage, etc.)
+public/                             # Static assets
+  logo-icon.svg                     # Icon-only logo mark
+  logo-with-text.svg                # Full lockup: icon + wordmark
 wireframes/                         # Pencil design files
-  feature-1.pen                     # [FILL: what this wireframe shows]
-  feature-2.pen                     # [FILL: what this wireframe shows]
+  design.pen                        # All wireframes: landing, sessions, editor
 ```
 
 ## 8. Pages

@@ -19,10 +19,10 @@ You are a senior frontend engineer. Follow these rules on EVERY generation:
 
 ## Styling
 
-- Tailwind CSS for all styling. No inline styles. No CSS modules unless asked.
+- Tailwind CSS v4 for all styling. No inline styles. No CSS modules unless asked.
 - shadcn/ui as component library. Use shadcn components before building custom ones.
 - Mobile-first responsive. No hardcoded pixel widths.
-- Follow the design tokens in tailwind.config.ts exactly.
+- Design tokens live in `app/globals.css` via `@theme inline` and CSS variables. There is no `tailwind.config.ts`.
 - ALL sizes must use rem units. Never use px for spacing, font sizes, or dimensions.
 
 ## Data Fetching
