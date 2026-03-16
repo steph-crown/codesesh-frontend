@@ -37,7 +37,7 @@ export function HeroSection() {
 
   return (
     <>
-      <section className="relative flex-1 flex flex-col items-center justify-center bg-[#FBF6F2] px-6 pt-[72px] text-center">
+      <section className="relative min-h-svh md:min-h-0 md:flex-1 flex flex-col items-center justify-center bg-[#FBF6F2] px-6 pt-[72px] text-center">
         <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-6">
           Real-time pair programming
         </span>

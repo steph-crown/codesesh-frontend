@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <main className="overflow-x-hidden">
       <Navbar />
-      <div className="min-h-svh flex flex-col">
+      <div className="md:min-h-svh md:flex md:flex-col">
         <HeroSection />
         <LiveDemo />
       </div>
