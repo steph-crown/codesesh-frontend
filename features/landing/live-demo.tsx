@@ -30,6 +30,130 @@ const DISPLAY_LINES = 7
 
 type CursorPos = { line: number; col: number }
 
+const KEYWORDS = new Set([
+  "function",
+  "return",
+  "const",
+  "let",
+  "var",
+  "new",
+  "if",
+  "else",
+  "for",
+  "while",
+  "import",
+  "export",
+  "class",
+  "typeof",
+  "async",
+  "await",
+])
+const TYPES = new Set([
+  "string",
+  "number",
+  "boolean",
+  "void",
+  "null",
+  "undefined",
+  "any",
+  "never",
+])
+const BUILTINS = new Set(["console", "Math", "Array", "Object", "Promise"])
+
+function highlightLine(text: string): React.ReactNode[] {
+  if (!text) return []
+  const result: React.ReactNode[] = []
+  let pos = 0
+
+  while (pos < text.length) {
+    if (/\s/.test(text[pos])) {
+      let end = pos
+      while (end < text.length && /\s/.test(text[end])) end++
+      result.push(<span key={pos}>{text.slice(pos, end)}</span>)
+      pos = end
+      continue
+    }
+
+    if (text[pos] === "`" || text[pos] === '"' || text[pos] === "'") {
+      const quote = text[pos]
+      let end = pos + 1
+      while (end < text.length && text[end] !== quote) {
+        if (text[end] === "\\") end++
+        end++
+      }
+      if (end < text.length) end++
+      result.push(
+        <span key={pos} className="text-[#86EFAC]">
+          {text.slice(pos, end)}
+        </span>
+      )
+      pos = end
+      continue
+    }
+
+    if (/[a-zA-Z_$]/.test(text[pos])) {
+      let end = pos
+      while (end < text.length && /[a-zA-Z0-9_$]/.test(text[end])) end++
+      const word = text.slice(pos, end)
+
+      if (KEYWORDS.has(word)) {
+        result.push(
+          <span key={pos} className="text-[#C084FC]">
+            {word}
+          </span>
+        )
+      } else if (TYPES.has(word)) {
+        result.push(
+          <span key={pos} className="text-[#67E8F9]">
+            {word}
+          </span>
+        )
+      } else if (BUILTINS.has(word)) {
+        result.push(
+          <span key={pos} className="text-[#FCD34D]">
+            {word}
+          </span>
+        )
+      } else if (end < text.length && text[end] === "(") {
+        result.push(
+          <span key={pos} className="text-[#93C5FD]">
+            {word}
+          </span>
+        )
+      } else {
+        result.push(
+          <span key={pos} className="text-gray-200">
+            {word}
+          </span>
+        )
+      }
+      pos = end
+      continue
+    }
+
+    if (/\d/.test(text[pos])) {
+      let end = pos
+      while (end < text.length && /[\d.]/.test(text[end])) end++
+      result.push(
+        <span key={pos} className="text-[#FCD34D]">
+          {text.slice(pos, end)}
+        </span>
+      )
+      pos = end
+      continue
+    }
+
+    result.push(
+      <span key={pos} className="text-gray-400">
+        {text[pos]}
+      </span>
+    )
+    pos++
+  }
+
+  return result
+}
+
 export function LiveDemo() {
   const sectionRef = useRef<HTMLElement>(null)
   const isInView = useInView(sectionRef, { amount: 0.3 })
@@ -108,9 +232,9 @@ export function LiveDemo() {
   }
 
   return (
-    <section ref={sectionRef} className="bg-[#020617] py-20 px-6 md:px-12">
+    <section ref={sectionRef} className="bg-[#020617] py-12 px-6 md:px-12">
       <motion.p
-        className="text-center text-sm font-medium text-gray-400 mb-10"
+        className="text-center text-sm font-medium text-gray-400 mb-8"
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -171,7 +295,7 @@ function EditorShell({
       <div className="flex items-center justify-between px-4 h-10 border-b border-white/[0.08]">
         <div className="flex items-center gap-2">
           <div
-            className="w-2 h-2 rounded-full"
+            className="w-2 h-2 rounded-sm"
             style={{ backgroundColor: userColor }}
           />
           <span className="text-xs font-medium text-gray-100">{userName}</span>
@@ -180,118 +304,61 @@ function EditorShell({
       </div>
 
       <div className="p-4 font-mono text-[13px] leading-6 min-h-[196px]">
-        {lines.map((line, i) => (
-          <div key={i} className="flex">
-            <span className="w-7 text-right text-gray-600 mr-3 select-none text-xs leading-6">
-              {i + 1}
-            </span>
-            <span className="text-gray-200 whitespace-pre">
-              <LineWithCursors
-                text={line}
-                lineIndex={i}
-                aliceCursor={aliceCursor}
-                bobCursor={bobCursor}
-                activeUser={activeUser}
-                isTypingLine={i === completedCount}
-              />
-            </span>
-          </div>
-        ))}
+        {lines.map((line, i) => {
+          const cursorsOnLine: {
+            col: number
+            color: string
+            label: string
+            active: boolean
+          }[] = []
+
+          if (aliceCursor.line === i) {
+            cursorsOnLine.push({
+              col: aliceCursor.col,
+              color: "#ff3c00",
+              label: "Alice",
+              active: activeUser === "alice" && i === completedCount,
+            })
+          }
+          if (bobCursor.line === i) {
+            cursorsOnLine.push({
+              col: bobCursor.col,
+              color: "#3B82F6",
+              label: "Bob",
+              active: activeUser === "bob" && i === completedCount,
+            })
+          }
+
+          return (
+            <div key={i} className="flex">
+              <span className="w-7 text-right text-gray-600 mr-3 select-none text-xs leading-6">
+                {i + 1}
+              </span>
+              <div className="relative whitespace-pre">
+                {line ? highlightLine(line) : "\u00A0"}
+                {cursorsOnLine.map((c) => (
+                  <span
+                    key={c.label}
+                    className="absolute top-0"
+                    style={{ left: `${c.col}ch` }}
+                  >
+                    <span
+                      className={`inline-block w-[2px] h-[1.15em] ${c.active ? "animate-cursor-blink" : "opacity-40"}`}
+                      style={{ backgroundColor: c.color }}
+                    />
+                    <span
+                      className="absolute -top-[18px] left-0 text-[9px] leading-none px-1 py-0.5 rounded font-sans whitespace-nowrap"
+                      style={{ backgroundColor: c.color, color: "white" }}
+                    >
+                      {c.label}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
-  )
-}
-
-function LineWithCursors({
-  text,
-  lineIndex,
-  aliceCursor,
-  bobCursor,
-  activeUser,
-  isTypingLine,
-}: {
-  text: string
-  lineIndex: number
-  aliceCursor: CursorPos
-  bobCursor: CursorPos
-  activeUser: "alice" | "bob"
-  isTypingLine: boolean
-}) {
-  type CursorInfo = {
-    col: number
-    color: string
-    label: string
-    active: boolean
-  }
-
-  const cursors: CursorInfo[] = []
-
-  if (aliceCursor.line === lineIndex) {
-    cursors.push({
-      col: aliceCursor.col,
-      color: "#ff3c00",
-      label: "Alice",
-      active: activeUser === "alice" && isTypingLine,
-    })
-  }
-  if (bobCursor.line === lineIndex) {
-    cursors.push({
-      col: bobCursor.col,
-      color: "#3B82F6",
-      label: "Bob",
-      active: activeUser === "bob" && isTypingLine,
-    })
-  }
-
-  cursors.sort((a, b) => a.col - b.col)
-
-  if (cursors.length === 0) {
-    return <>{text || "\u00A0"}</>
-  }
-
-  const parts: React.ReactNode[] = []
-  let lastCol = 0
-
-  cursors.forEach((cursor, idx) => {
-    if (cursor.col > lastCol) {
-      parts.push(
-        <span key={`t-${idx}`}>{text.slice(lastCol, cursor.col)}</span>
-      )
-    }
-    parts.push(<CursorBar key={`c-${idx}`} {...cursor} />)
-    lastCol = cursor.col
-  })
-
-  if (lastCol < text.length) {
-    parts.push(<span key="t-end">{text.slice(lastCol)}</span>)
-  } else if (parts.length === 0) {
-    parts.push(<span key="empty">{"\u00A0"}</span>)
-  }
-
-  return <>{parts}</>
-}
-
-function CursorBar({
-  color,
-  label,
-  active,
-}: {
-  color: string
-  label: string
-  active: boolean
-}) {
-  return (
-    <span className="relative inline-block w-0">
-      <span
-        className={`absolute top-0 left-0 inline-block w-[2px] h-[1.15em] ${active ? "animate-cursor-blink" : "opacity-40"}`}
-        style={{ backgroundColor: color }}
-      />
-      <span
-        className="absolute -top-[18px] left-0 text-[9px] leading-none px-1 py-0.5 rounded font-sans whitespace-nowrap"
-        style={{ backgroundColor: color, color: "white" }}
-      >
-        {label}
-      </span>
-    </span>
   )
 }

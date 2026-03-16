@@ -9,8 +9,10 @@ export default function Home() {
   return (
     <main className="overflow-x-hidden">
       <Navbar />
-      <HeroSection />
-      <LiveDemo />
+      <div className="min-h-svh flex flex-col">
+        <HeroSection />
+        <LiveDemo />
+      </div>
       <FeaturesSection />
       <div className="border-t border-[#C7C3BB] max-w-7xl mx-auto"></div>
       <HowItWorks />

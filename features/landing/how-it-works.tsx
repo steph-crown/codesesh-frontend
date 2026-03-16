@@ -3,18 +3,33 @@ const STEPS = [
     num: "1",
     title: "Pick a name",
     description: "Enter any display name. No signup, no email, no password.",
+    cardBg: "bg-white",
+    circleBg: "bg-primary",
+    circleText: "text-white",
+    titleColor: "text-[#0A0A0A]",
+    descColor: "text-[#6B7280]",
   },
   {
     num: "2",
     title: "Create a session",
     description:
       "One click and you get a unique session URL ready to share with anyone.",
+    cardBg: "bg-[#FFB199]",
+    circleBg: "bg-primary",
+    circleText: "text-white",
+    titleColor: "text-[#0A0A0A]",
+    descColor: "text-[#6B7280]",
   },
   {
     num: "3",
     title: "Code together",
     description:
       "Share the link. Your teammate joins instantly and you see each other typing live.",
+    cardBg: "bg-[#FF764D]",
+    circleBg: "bg-white",
+    circleText: "text-primary",
+    titleColor: "text-[#0A0A0A]",
+    descColor: "text-[#6B7280]",
   },
 ];
 
@@ -30,17 +45,21 @@ export function HowItWorks() {
           {STEPS.map((step) => (
             <div
               key={step.num}
-              className="flex flex-col items-center text-center gap-3 bg-white rounded-[40px] p-8"
+              className={`flex flex-col items-center text-center gap-3 ${step.cardBg} rounded-[40px] p-8`}
             >
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-white text-base font-bold">
+              <div
+                className={`w-10 h-10 rounded-full ${step.circleBg} flex items-center justify-center`}
+              >
+                <span className={`text-base font-bold ${step.circleText}`}>
                   {step.num}
                 </span>
               </div>
-              <h3 className="text-lg font-semibold text-[#0A0A0A]">
+              <h3 className={`text-lg font-semibold ${step.titleColor}`}>
                 {step.title}
               </h3>
-              <p className="text-[#6B7280] text-sm leading-[1.4] max-w-[280px]">
+              <p
+                className={`text-sm leading-[1.4] max-w-[280px] ${step.descColor}`}
+              >
                 {step.description}
               </p>
             </div>

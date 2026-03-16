@@ -37,7 +37,10 @@ export function HeroSection() {
 
   return (
     <>
-      <section className="relative flex flex-col items-center justify-center min-h-svh bg-[#FBF6F2] px-6 pt-[72px] text-center">
+      <section className="relative flex-1 flex flex-col items-center justify-center bg-[#FBF6F2] px-6 pt-[72px] text-center">
+        <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-6">
+          Real-time pair programming
+        </span>
         <h1 className="text-4xl sm:text-5xl md:text-[56px] font-bold leading-[1.1] tracking-tight text-[#0A0A0A] max-w-[800px]">
           Code together, instantly.
         </h1>
