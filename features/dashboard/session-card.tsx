@@ -8,6 +8,9 @@ import {
   PencilEdit01Icon,
   PlayCircle02Icon,
   Delete01Icon,
+  LockIcon,
+  ViewIcon,
+  PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import {
   Popover,
@@ -16,7 +19,14 @@ import {
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarGroup } from "@/components/ui/avatar";
 import type { Session } from "@/lib/sessions";
+import { getColorForUser } from "@/lib/colors";
 import { timeAgo } from "@/lib/time";
+
+const PRIVACY_CONFIG = {
+  private: { icon: LockIcon, label: "Private" },
+  view: { icon: ViewIcon, label: "View only" },
+  edit: { icon: PencilEdit02Icon, label: "Can edit" },
+} as const;
 
 function getInitials(name: string) {
   return name
@@ -48,9 +58,20 @@ export function SessionCard({
           <h3 className="text-base font-semibold text-[#0A0A0A] truncate">
             {session.title}
           </h3>
-          <p className="mt-1 text-xs text-[#9CA3AF]">
-            {session.isOwner ? "Created by you" : "Joined session"}
-          </p>
+          <div className="mt-1.5 flex items-center gap-2">
+            <span className="flex items-center gap-1 text-xs text-[#9CA3AF]">
+              <HugeiconsIcon
+                icon={PRIVACY_CONFIG[session.privacy].icon}
+                size={12}
+                strokeWidth={2}
+              />
+              {PRIVACY_CONFIG[session.privacy].label}
+            </span>
+            <span className="text-[#D1D5DB]">&middot;</span>
+            <span className="text-xs text-[#9CA3AF]">
+              {session.isOwner ? "Created by you" : "Joined session"}
+            </span>
+          </div>
         </div>
 
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
@@ -123,11 +144,16 @@ export function SessionCard({
 
       <div className="mt-6 flex items-center justify-between">
         <AvatarGroup>
-          {session.contributors.slice(0, 4).map((c) => (
-            <Avatar key={c.username} size="sm">
-              <AvatarFallback>{getInitials(c.username)}</AvatarFallback>
-            </Avatar>
-          ))}
+          {session.contributors.slice(0, 4).map((c) => {
+            const userColor = getColorForUser(c.username);
+            return (
+              <Avatar key={c.username} size="sm">
+                <AvatarFallback color={userColor}>
+                  {getInitials(c.username)}
+                </AvatarFallback>
+              </Avatar>
+            );
+          })}
         </AvatarGroup>
         <p className="text-xs text-[#9CA3AF]">{timeAgo(session.updatedAt)}</p>
       </div>

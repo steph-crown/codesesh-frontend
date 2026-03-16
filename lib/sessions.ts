@@ -8,15 +8,25 @@ export type Session = {
   createdAt: number;
   updatedAt: number;
   isOwner: boolean;
+  privacy: "private" | "view" | "edit";
   contributors: Contributor[];
 };
 
 export type Contributor = {
   username: string;
+  color?: string;
 };
 
 export type UserProfile = {
   username: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  sender: string;
+  content: string;
+  timestamp: number;
+  mentions?: string[];
 };
 
 export function getSessions(): Session[] {
@@ -43,6 +53,7 @@ export function createSession(username: string): Session {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     isOwner: true,
+    privacy: "private",
     contributors: [{ username }],
   };
   sessions.unshift(session);
@@ -93,6 +104,7 @@ export function migrateLegacySessions() {
       createdAt: (old.createdAt as number) || Date.now(),
       updatedAt: (old.createdAt as number) || Date.now(),
       isOwner: true,
+      privacy: "private" as const,
       contributors: [
         { username: (old.username as string) || "Unknown" },
       ],

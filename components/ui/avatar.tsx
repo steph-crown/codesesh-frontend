@@ -40,15 +40,28 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
 
 function AvatarFallback({
   className,
+  color,
   ...props
-}: AvatarPrimitive.Fallback.Props) {
+}: AvatarPrimitive.Fallback.Props & {
+  color?: { bg: string; text: string; border: string };
+}) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs",
+        "flex size-full items-center justify-center rounded-full text-sm font-medium group-data-[size=sm]/avatar:text-xs",
+        !color && "bg-muted text-muted-foreground",
         className,
       )}
+      style={
+        color
+          ? {
+              backgroundColor: color.bg,
+              color: color.text,
+              borderColor: color.border,
+            }
+          : undefined
+      }
       {...props}
     />
   );
