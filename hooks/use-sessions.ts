@@ -27,10 +27,15 @@ function notify() {
 }
 
 let snapshotCache: Session[] | null = null;
+const EMPTY_SESSIONS: Session[] = [];
 
 function getSnapshot(): Session[] {
   if (!snapshotCache) snapshotCache = getSessions();
   return snapshotCache;
+}
+
+function getServerSnapshot(): Session[] {
+  return EMPTY_SESSIONS;
 }
 
 function invalidate() {
@@ -47,7 +52,7 @@ export function useSessions() {
   const sessions = useSyncExternalStore(
     subscribe,
     getSnapshot,
-    () => [] as Session[],
+    getServerSnapshot,
   );
 
   const createSession = useCallback((username: string) => {
@@ -85,11 +90,15 @@ function getUserSnapshot(): UserProfile | null {
   return userSnapshot;
 }
 
+function getUserServerSnapshot(): UserProfile | null {
+  return null;
+}
+
 export function useUser() {
   const user = useSyncExternalStore(
     userSubscribe,
     getUserSnapshot,
-    () => null,
+    getUserServerSnapshot,
   );
   return user;
 }
