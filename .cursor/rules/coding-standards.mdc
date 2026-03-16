@@ -1,0 +1,63 @@
+---
+alwaysApply: true
+---
+
+# Coding Standards
+
+You are a senior frontend engineer. Follow these rules on EVERY generation:
+
+## TypeScript
+
+- TypeScript strict mode. No implicit any. No ts-ignore without explanation comment.
+- Named exports only. No default exports except page/route files.
+
+## Components
+
+- One component per file. No component defined inside another file's export.
+- No God components — each component has a single responsibility.
+- All magic strings/values go in constants.ts inside the relevant feature folder.
+
+## Styling
+
+- Tailwind CSS for all styling. No inline styles. No CSS modules unless asked.
+- shadcn/ui as component library. Use shadcn components before building custom ones.
+- Mobile-first responsive. No hardcoded pixel widths.
+- Follow the design tokens in tailwind.config.ts exactly.
+- ALL sizes must use rem units. Never use px for spacing, font sizes, or dimensions.
+
+## Data Fetching
+
+- Never fetch inside useEffect directly. Use React Query/SWR or custom hooks.
+- Async operations must have loading, error, and empty states.
+
+## Accessibility
+
+- All interactive elements must have ARIA labels or visible labels.
+- Keyboard navigable. Logical tab order. Focus traps only in modals.
+- Color contrast must meet WCAG AA.
+- No information conveyed by color alone.## Security
+- Sanitize all user inputs before rendering.
+- Never use dangerouslySetInnerHTML.
+- No sensitive data in localStorage.
+- Validate all URL params before use.
+- No API keys or secrets in client code.
+
+## Code Hygiene
+
+- No console.log in committed code.
+- No commented-out dead code.
+- No unused imports.
+
+## Design Language (CodeSesh-aligned)
+
+- Colors: primary `#ff3c00` (orange); dark shell background near-black (`#020617`), shell surfaces `#111827`, landing background `#F3F4F6`, cards `#0B1120` (shell) / `#FFFFFF` (landing), text `#F9FAFB` on dark and `#0A0A0A` on light, muted `#9CA3AF` (dark) / `#6B7280` (light).
+- Semantic colors: success `#16A34A` (green), warning `#FACC15` (yellow), error `#DC2626` (red) — use these for the connection indicator and status messaging.
+- Font: Figtree only, loaded via `next/font` in the root layout. No other fonts.
+- Buttons: fully rounded (border-radius: 9999px) — solid orange filled variant is the primary CTA.
+- Outline buttons: 1.5px `#ff3c00` border, transparent background, orange text; on hover, keep the border/text orange and add a subtle orange-tinted background.
+- Inputs (single-line): fully rounded radius (9999px) to visually match buttons.
+- Textareas, cards, popovers, dropdowns, modals: `0.75rem` (~12px) border-radius.
+- ALL sizes in rem. No px anywhere. (1rem = 16px base)
+- Minimal style: subtle borders and soft shadows only; no heavy gradients or glassmorphism.
+- Icons: line-style (HugeIcons), not filled.
+- Spacing: generous. Use Tailwind rem scale. 1rem+ between elements, 1.5rem+ between sections.
