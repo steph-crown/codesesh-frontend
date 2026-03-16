@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { createSession, saveUser } from "@/lib/sessions";
 
 export function HeroSection() {
   const router = useRouter();
@@ -20,13 +21,9 @@ export function HeroSection() {
   function handleCreate() {
     const name = username.trim();
     if (!name) return;
-    const id = crypto.randomUUID().slice(0, 8);
-    const sessions = JSON.parse(
-      localStorage.getItem("codesesh_sessions") || "[]",
-    );
-    sessions.push({ id, username: name, createdAt: Date.now() });
-    localStorage.setItem("codesesh_sessions", JSON.stringify(sessions));
-    router.push(`/sessions/${id}`);
+    const session = createSession(name);
+    saveUser({ username: name });
+    router.push(`/sessions/${session.id}`);
   }
 
   function handleJoin() {

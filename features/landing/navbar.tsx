@@ -21,7 +21,7 @@ export function Navbar() {
       </Link>
       <div className="flex items-center gap-4">
         <Link
-          href="/sessions"
+          href="/my-sessions"
           className="hidden sm:block text-sm font-medium text-[#0A0A0A] hover:text-primary transition-colors"
         >
           My Sessions
