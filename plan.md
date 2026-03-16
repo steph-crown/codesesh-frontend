@@ -71,7 +71,8 @@ CodeSesh is a Next.js frontend for a realtime collaborative code editor. A devel
 | Semantic Error             | `#DC2626` (red)                                       | Connection “disconnected” indicator, errors.                                                    |
 | Button Radius              | `9999px` (full)                                       | All primary/secondary buttons (filled + outline).                                               |
 | Input Radius (single-line) | `9999px` (full)                                       | Text inputs, selects, chips.                                                                    |
-| Surface Radius             | `0.75rem` (~12px)                                     | Textareas, cards, popovers, dropdown menus, modals.                                             |
+| Surface Radius             | `0.75rem`                                             | Textareas, cards, popovers, dropdown menus.                                                     |
+| Modal Radius               | `1rem`                                                | Modals and dialogs only — slightly larger to feel elevated above the page.                      |
 | Outline Button             | `1.5px` border, transparent bg, text/border `#ff3c00` | Secondary CTAs; on hover, add subtle orange-tinted background while keeping text/border orange. |
 | Shadow                     | `very subtle` only                                    | Prefer 1px borders over heavy shadows.                                                          |
 | Sizing Unit                | `rem`                                                 | ALL sizes in rem. No px in code. (1rem = 16px base)                                             |
@@ -152,13 +153,23 @@ wireframes/                         # Pencil design files
 
 ### Feature 1: Landing Page & Session Creation
 
-**Wireframe:** `wireframes/feature-1.pen`
+**Wireframe:** `wireframes/design.pen`
+**Page section order (top to bottom):**
+1. **Navbar** — Logo + "My Sessions" link + outline button with GitHub icon + "Star on GitHub"
+2. **Hero** — Full viewport height, `#FBF6F2` bg. Headline: "Code together, instantly." + body text + username input (white, `#DFDDD7` border, fully rounded) + "Create Session" (solid orange) + "Join Session" (outline orange, opens modal with `1rem` radius and autofocused session ID input).
+3. **Live demo** — Full-width dark section (`#020617`). Two side-by-side editor shells with colored cursors animating real-time typing. Framer Motion + IntersectionObserver.
+4. **Features** — 3-4 feature cards on light background.
+5. **How it works** — 3-step flow on `#F3F4F6`.
+6. **Footer** — Minimal, dark (`#020617`). Logo + tagline + GitHub link.
 **Acceptance Criteria:**
 
-- [ ] Landing page at `/` with Figtree font, light theme, hero section, username input, “Create Session” and “Join Session” buttons.
+- [ ] Landing page at `/` with Figtree font, `#FBF6F2` hero background, full viewport height hero.
+- [ ] Username input: white fill, `#DFDDD7` border, fully rounded. Both CTAs are fully rounded pills.
+- [ ] "Join Session" opens a modal with `1rem` border radius and autofocused session ID input.
 - [ ] Creating a session generates a unique session ID, saves it (and metadata) to localStorage, and navigates appropriately.
 - [ ] If a user with existing sessions visits `/`, they are redirected to `/sessions`.
-- [ ] Layout is responsive (mobile → desktop) and accessible (labels, keyboard navigation).
+- [ ] Live demo section animates with Framer Motion on scroll, showing two cursors editing simultaneously.
+- [ ] Layout is responsive (mobile to desktop) and accessible (labels, keyboard navigation).
 
 ### Feature 2: Session List
 

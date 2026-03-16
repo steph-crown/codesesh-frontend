@@ -52,6 +52,7 @@ alwaysApply: true
 - Buttons: fully rounded (9999px / 100% border-radius) — solid orange is the default primary style.
 - Outline buttons: 1.5px `#ff3c00` border, transparent background, orange text; on hover, add a subtle orange-tinted background while keeping text/border orange.
 - Inputs (single-line): fully rounded (9999px), matching button height and radius.
-- Textareas, cards, popovers, dropdowns, modals: `0.75rem` (~12px) border-radius.
+- Textareas, cards, popovers, dropdowns: `0.75rem` border-radius.
+- Modals / dialogs: `1rem` border-radius (slightly larger to feel elevated).
 - ALL sizes in rem. No px.
 - Style: Replit-inspired dark editor shell with LeetCode-like clarity; content-first, minimal chrome, generous whitespace.

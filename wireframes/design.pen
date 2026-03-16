@@ -1,0 +1,1171 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "G188f",
+      "x": 0,
+      "y": 0,
+      "name": "Landing Page",
+      "width": 1440,
+      "fill": "#FBF6F2",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "NKrH9",
+          "name": "Navbar",
+          "width": "fill_container",
+          "height": 72,
+          "padding": [
+            0,
+            48
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "yz8o1",
+              "name": "navLeft",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "aM2WN",
+                  "name": "logoIcon",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "#ff3c00",
+                  "cornerRadius": 4
+                },
+                {
+                  "type": "text",
+                  "id": "T44CL",
+                  "name": "logoText",
+                  "fill": "#121212",
+                  "content": "CodeSesh",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SQxIu",
+              "name": "navRight",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "OlOMX",
+                  "name": "mySessions",
+                  "fill": "#0A0A0A",
+                  "content": "My Sessions",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "aUmsg",
+                  "name": "Star on GitHub btn",
+                  "cornerRadius": 9999,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1.5,
+                    "fill": "#ff3c00"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    8,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "PtVKQ",
+                      "name": "githubIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "github",
+                      "iconFontFamily": "lucide",
+                      "fill": "#ff3c00"
+                    },
+                    {
+                      "type": "text",
+                      "id": "0kG84",
+                      "name": "githubText",
+                      "fill": "#ff3c00",
+                      "content": "Star on GitHub",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yiwnC",
+          "name": "Hero",
+          "width": "fill_container",
+          "height": 828,
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            0,
+            120
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "GdYos",
+              "name": "headline",
+              "fill": "#0A0A0A",
+              "textGrowth": "fixed-width",
+              "width": 800,
+              "content": "Code together, instantly.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 56,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "7C3rn",
+              "name": "bodyText",
+              "fill": "#4B5563",
+              "textGrowth": "fixed-width",
+              "width": 640,
+              "content": "Create a live coding session and share the link. Your teammate joins in seconds — no signup, no setup. Just open, write, and watch edits appear in real time.",
+              "lineHeight": 1.6,
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 18
+            },
+            {
+              "type": "frame",
+              "id": "Rr4y5",
+              "name": "ctaGroup",
+              "layout": "vertical",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "6tQTs",
+                  "name": "Username input",
+                  "width": 400,
+                  "height": 48,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 9999,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#DFDDD7"
+                  },
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dYgQK",
+                      "name": "inputPlaceholder",
+                      "fill": "#9CA3AF",
+                      "content": "Enter your username",
+                      "fontFamily": "Inter",
+                      "fontSize": 15
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zkWQL",
+                  "name": "buttonRow",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "onvYU",
+                      "name": "Create Session CTA",
+                      "fill": "#ff3c00",
+                      "cornerRadius": 9999,
+                      "gap": 8,
+                      "padding": [
+                        12,
+                        28
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "JmgmB",
+                          "name": "createBtnText",
+                          "fill": "#FFFFFF",
+                          "content": "Create Session",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "psPjs",
+                      "name": "Join Session CTA",
+                      "cornerRadius": 9999,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1.5,
+                        "fill": "#ff3c00"
+                      },
+                      "gap": 8,
+                      "padding": [
+                        12,
+                        28
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E52BA",
+                          "name": "joinBtnText",
+                          "fill": "#ff3c00",
+                          "content": "Join Session",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RV7Cs",
+          "name": "Live Demo",
+          "width": "fill_container",
+          "fill": "#020617",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            80,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "LMw6O",
+              "name": "demoLabel",
+              "fill": "#9CA3AF",
+              "content": "See it in action",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "500"
+            },
+            {
+              "type": "frame",
+              "id": "3z9NY",
+              "name": "Editor pair",
+              "width": 960,
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vTiQx",
+                  "name": "Editor A (Alice)",
+                  "width": "fill_container",
+                  "fill": "#0B1120",
+                  "cornerRadius": 12,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kzJlY",
+                      "name": "headerA",
+                      "width": "fill_container",
+                      "height": 40,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#ffffff14"
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "q4Mmp",
+                          "name": "userPillA",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "xiNFC",
+                              "name": "dotA",
+                              "width": 8,
+                              "height": 8,
+                              "fill": "#ff3c00",
+                              "cornerRadius": 9999
+                            },
+                            {
+                              "type": "text",
+                              "id": "p4kbG",
+                              "name": "nameA",
+                              "fill": "#F9FAFB",
+                              "content": "Alice",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "aSI7U",
+                          "name": "langA",
+                          "fill": "#9CA3AF",
+                          "content": "TypeScript",
+                          "fontFamily": "Inter",
+                          "fontSize": 11
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fd1TE",
+                      "name": "codeAreaA",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "JfjIa",
+                          "name": "lineA1",
+                          "fill": "#E2E8F0",
+                          "content": "const greet = (name: string) => {",
+                          "fontFamily": "Inter",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "mXQxd",
+                          "name": "lineA2",
+                          "fill": "#E2E8F0",
+                          "content": "  return `Hello, ${name}!`",
+                          "fontFamily": "Inter",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "OguJS",
+                          "name": "lineA3",
+                          "fill": "#E2E8F0",
+                          "content": "}",
+                          "fontFamily": "Inter",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "hQQDH",
+                          "name": "cursorA",
+                          "fill": "#ff3c00",
+                          "width": 2,
+                          "height": 16
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Sybi8",
+                  "name": "Editor B (Bob)",
+                  "width": "fill_container",
+                  "fill": "#0B1120",
+                  "cornerRadius": 12,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "0BMwL",
+                      "name": "headerB",
+                      "width": "fill_container",
+                      "height": 40,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#ffffff14"
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "KV2w0",
+                          "name": "userPillB",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "TZ4Z5",
+                              "name": "dotB",
+                              "width": 8,
+                              "height": 8,
+                              "fill": "#3B82F6",
+                              "cornerRadius": 9999
+                            },
+                            {
+                              "type": "text",
+                              "id": "gwRlE",
+                              "name": "nameB",
+                              "fill": "#F9FAFB",
+                              "content": "Bob",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "yg8tg",
+                          "name": "langB",
+                          "fill": "#9CA3AF",
+                          "content": "TypeScript",
+                          "fontFamily": "Inter",
+                          "fontSize": 11
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "35fyL",
+                      "name": "codeAreaB",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "AaRL1",
+                          "name": "lineB1",
+                          "fill": "#E2E8F0",
+                          "content": "const greet = (name: string) => {",
+                          "fontFamily": "Inter",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "0Lxir",
+                          "name": "lineB2",
+                          "fill": "#E2E8F0",
+                          "content": "  return `Hello, ${name}!`",
+                          "fontFamily": "Inter",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "iBdAM",
+                          "name": "lineB3",
+                          "fill": "#E2E8F0",
+                          "content": "}",
+                          "fontFamily": "Inter",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "tHoUg",
+                          "name": "cursorB",
+                          "fill": "#3B82F6",
+                          "width": 2,
+                          "height": 16
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wCOPO",
+          "name": "Features",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            80,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "L9DSW",
+              "name": "featHead",
+              "fill": "#0A0A0A",
+              "content": "Built for real-time collaboration",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 36,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "EEvBT",
+              "name": "featSub",
+              "fill": "#6B7280",
+              "content": "Everything you need for seamless pair programming.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 16
+            },
+            {
+              "type": "frame",
+              "id": "V1R31",
+              "name": "grid",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "QuLyF",
+                  "name": "row1",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "aibs8",
+                      "name": "card1",
+                      "width": "fill_container",
+                      "fill": "#F9FAFB",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "YS7to",
+                          "name": "icon1",
+                          "width": 24,
+                          "height": 24,
+                          "iconFontName": "zap",
+                          "iconFontFamily": "lucide",
+                          "fill": "#ff3c00"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xSYrj",
+                          "name": "title1",
+                          "fill": "#0A0A0A",
+                          "content": "Instant sync",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "T9BeE",
+                          "name": "desc1",
+                          "fill": "#6B7280",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Every keystroke appears on all screens within 100ms. Last-write-wins keeps things simple.",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 14
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "igzcN",
+                      "name": "card2",
+                      "width": "fill_container",
+                      "fill": "#F9FAFB",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "qmnQq",
+                          "name": "icon2",
+                          "width": 24,
+                          "height": 24,
+                          "iconFontName": "mouse-pointer-2",
+                          "iconFontFamily": "lucide",
+                          "fill": "#ff3c00"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ka8uO",
+                          "name": "title2",
+                          "fill": "#0A0A0A",
+                          "content": "Live cursors",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TtKd7",
+                          "name": "desc2",
+                          "fill": "#6B7280",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "See exactly where your teammate is typing with named, color-coded cursor bars in real time.",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 14
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PzuQG",
+                  "name": "row2",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XUu2b",
+                      "name": "card3",
+                      "width": "fill_container",
+                      "fill": "#F9FAFB",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "FLv9s",
+                          "name": "icon3",
+                          "width": 24,
+                          "height": 24,
+                          "iconFontName": "link",
+                          "iconFontFamily": "lucide",
+                          "fill": "#ff3c00"
+                        },
+                        {
+                          "type": "text",
+                          "id": "mpiLB",
+                          "name": "title3",
+                          "fill": "#0A0A0A",
+                          "content": "Share a URL, done",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "hOPno",
+                          "name": "desc3",
+                          "fill": "#6B7280",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Every session has a unique URL. Share it and your collaborator joins instantly, no account needed.",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 14
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QRjYs",
+                      "name": "card4",
+                      "width": "fill_container",
+                      "fill": "#F9FAFB",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 28,
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "mRMCY",
+                          "name": "icon4",
+                          "width": 24,
+                          "height": 24,
+                          "iconFontName": "code",
+                          "iconFontFamily": "lucide",
+                          "fill": "#ff3c00"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kucjP",
+                          "name": "title4",
+                          "fill": "#0A0A0A",
+                          "content": "Multi-language support",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "SpvIt",
+                          "name": "desc4",
+                          "fill": "#6B7280",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "TypeScript, Rust, JavaScript, Python, Go. Pick a language and the editor highlights for you.",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 14
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "y4KvP",
+          "name": "How It Works",
+          "width": "fill_container",
+          "fill": "#F3F4F6",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            80,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "dBCPF",
+              "name": "hiwHead",
+              "fill": "#0A0A0A",
+              "content": "Up and running in 3 steps",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 36,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "3oCgI",
+              "name": "stepsRow",
+              "width": "fill_container",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "HZ12K",
+                  "name": "step1",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "vMDKv",
+                      "name": "num1",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "#ff3c00",
+                      "cornerRadius": 9999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "5DGTT",
+                          "name": "num1t",
+                          "fill": "#FFFFFF",
+                          "content": "1",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "2JzRT",
+                      "name": "stepTitle1",
+                      "fill": "#0A0A0A",
+                      "content": "Pick a name",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HSRue",
+                      "name": "stepDesc1",
+                      "fill": "#6B7280",
+                      "textGrowth": "fixed-width",
+                      "width": 280,
+                      "content": "Enter any username. No signup, no email.",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 14
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gPOGk",
+                  "name": "step2",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jx72j",
+                      "name": "num2",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "#ff3c00",
+                      "cornerRadius": 9999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "LqZ5v",
+                          "name": "num2t",
+                          "fill": "#FFFFFF",
+                          "content": "2",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "dRgjX",
+                      "name": "stepTitle2",
+                      "fill": "#0A0A0A",
+                      "content": "Create a session",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "R5zpH",
+                      "name": "stepDesc2",
+                      "fill": "#6B7280",
+                      "textGrowth": "fixed-width",
+                      "width": 280,
+                      "content": "One click and you get a unique session URL ready to share.",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 14
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PGZWY",
+                  "name": "step3",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "HKqwf",
+                      "name": "num3",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "#ff3c00",
+                      "cornerRadius": 9999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "1mcQq",
+                          "name": "num3t",
+                          "fill": "#FFFFFF",
+                          "content": "3",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "pkleo",
+                      "name": "stepTitle3",
+                      "fill": "#0A0A0A",
+                      "content": "Code together",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "bglkF",
+                      "name": "stepDesc3",
+                      "fill": "#6B7280",
+                      "textGrowth": "fixed-width",
+                      "width": 280,
+                      "content": "Share the link. Your teammate joins instantly and you see each other typing live.",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 14
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ok4xv",
+          "name": "Footer",
+          "width": "fill_container",
+          "fill": "#020617",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            48,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "echDH",
+              "name": "footLogo",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MsBRp",
+                  "name": "footIcon",
+                  "width": 20,
+                  "height": 20,
+                  "fill": "#ff3c00",
+                  "cornerRadius": 4
+                },
+                {
+                  "type": "text",
+                  "id": "n4QEp",
+                  "name": "footName",
+                  "fill": "#F9FAFB",
+                  "content": "CodeSesh",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "wQxUA",
+              "name": "footTagline",
+              "fill": "#9CA3AF",
+              "content": "Realtime collaborative code editing. No setup required.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 14
+            },
+            {
+              "type": "frame",
+              "id": "VeKuZ",
+              "name": "footLinks",
+              "gap": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "UAdaj",
+                  "name": "footGH",
+                  "fill": "#9CA3AF",
+                  "content": "GitHub",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "30aDs",
+                  "name": "footDivider",
+                  "fill": "#374151",
+                  "content": "|",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "33Q3z",
+                  "name": "footBuilt",
+                  "fill": "#6B7280",
+                  "content": "Built with Next.js, Monaco, and Rust",
+                  "fontFamily": "Inter",
+                  "fontSize": 13
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "HQBIl",
+      "x": 1520,
+      "y": 400,
+      "name": "Join Session Modal",
+      "width": 440,
+      "fill": "#FFFFFF",
+      "cornerRadius": 16,
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 32,
+      "children": [
+        {
+          "type": "text",
+          "id": "lQ7ZN",
+          "name": "modalTitle",
+          "fill": "#0A0A0A",
+          "content": "Join a session",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "HSfVK",
+          "name": "modalDesc",
+          "fill": "#6B7280",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Enter the session ID shared with you to join.",
+          "lineHeight": 1.5,
+          "fontFamily": "Inter",
+          "fontSize": 14
+        },
+        {
+          "type": "frame",
+          "id": "tnn82",
+          "name": "Session ID input (autofocused)",
+          "width": "fill_container",
+          "height": 48,
+          "fill": "#FFFFFF",
+          "cornerRadius": 9999,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1.5,
+            "fill": "#ff3c00"
+          },
+          "padding": [
+            0,
+            20
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "y2sB4",
+              "name": "modalPlaceholder",
+              "fill": "#9CA3AF",
+              "content": "e.g. xk7p2",
+              "fontFamily": "Inter",
+              "fontSize": 15
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "d82Vm",
+          "name": "Join CTA",
+          "width": "fill_container",
+          "height": 48,
+          "fill": "#ff3c00",
+          "cornerRadius": 9999,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "xAsRD",
+              "name": "modalBtnText",
+              "fill": "#FFFFFF",
+              "content": "Join Session",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
