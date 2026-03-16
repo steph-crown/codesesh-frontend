@@ -99,9 +99,9 @@ const HARDCODED_USER: UserProfile = { username: "Stephen" };
 export function useSessions() {
   const sessions = HARDCODED_SESSIONS;
 
-  const createSession = () => sessions[0];
-  const deleteSession = () => {};
-  const renameSession = () => {};
+  const createSession = (_name?: string) => sessions[0];
+  const deleteSession = (_id?: string) => {};
+  const renameSession = (_id?: string, _name?: string) => {};
 
   return { sessions, createSession, deleteSession, renameSession };
 }

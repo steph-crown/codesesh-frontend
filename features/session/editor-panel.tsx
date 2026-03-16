@@ -2,8 +2,9 @@
 
 import { useRef } from "react";
 import Editor, { type OnMount } from "@monaco-editor/react";
-import type { editor } from "monaco-editor";
 import { LANGUAGES } from "./language-selector";
+
+type MonacoEditor = Parameters<OnMount>[0];
 
 const DEFAULT_CODE: Record<string, string> = {
   typescript: `function twoSum(nums: number[], target: number): number[] {
@@ -75,9 +76,9 @@ export function EditorPanel({
   onEditorMount,
 }: {
   language: string;
-  onEditorMount?: (editor: editor.IStandaloneCodeEditor) => void;
+  onEditorMount?: (editor: MonacoEditor) => void;
 }) {
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<MonacoEditor | null>(null);
 
   const monacoLang =
     LANGUAGES.find((l) => l.id === language)?.monacoId ?? "typescript";
