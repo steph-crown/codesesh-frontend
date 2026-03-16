@@ -89,14 +89,16 @@ export function Sidebar() {
             collapsed ? "justify-center" : "justify-between",
           )}
         >
-          <Link href="/my-sessions" className="flex items-center gap-2">
-            <Image
-              src="/logo-icon.svg"
-              alt="CodeSesh"
-              width={28}
-              height={28}
-            />
-          </Link>
+          {!collapsed && (
+            <Link href="/my-sessions" className="flex items-center gap-2">
+              <Image
+                src="/logo-icon.svg"
+                alt="CodeSesh"
+                width={28}
+                height={28}
+              />
+            </Link>
+          )}
           <button
             onClick={toggle}
             className="p-1.5 rounded-lg hover:bg-[#FAF5F0] transition-colors"
