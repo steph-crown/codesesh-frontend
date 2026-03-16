@@ -9,7 +9,7 @@ import { GithubIcon } from "@hugeicons/core-free-icons";
 
 export function Navbar() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-[72px] px-6 md:px-12 bg-[#FBF6F2]/80 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-[72px] px-5 md:px-12 bg-[#FBF6F2]/80 backdrop-blur-md">
       <Link href="/">
         <Image
           src="/logo-with-text.svg"

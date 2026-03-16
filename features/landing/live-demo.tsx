@@ -232,7 +232,7 @@ export function LiveDemo() {
   }
 
   return (
-    <section ref={sectionRef} className="bg-[#020617] py-12 px-6 md:px-12">
+    <section ref={sectionRef} className="bg-[#020617] py-12 px-5 md:px-12">
       <motion.p
         className="text-center text-sm font-medium text-gray-400 mb-8"
         initial={{ opacity: 0, y: 12 }}

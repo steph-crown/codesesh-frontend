@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="bg-[#020617] py-12 px-6 md:px-12">
+    <footer className="bg-[#020617] py-12 px-5 md:px-12">
       <div className="max-w-4xl mx-auto flex flex-col items-center gap-5">
         <div className="flex items-center gap-2">
           <Image src="/logo-icon.svg" alt="CodeSesh" width={40} height={40} />

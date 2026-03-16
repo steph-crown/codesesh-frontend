@@ -2,13 +2,15 @@
 
 import type { Session, UserProfile } from "@/lib/sessions";
 
+const NOW = 1742158800000; // 2025-03-16T21:00:00Z
+
 const HARDCODED_SESSIONS: Session[] = [
   {
     id: "abc12345",
     title: "React Dashboard",
     username: "Stephen",
-    createdAt: Date.now() - 3600000,
-    updatedAt: Date.now() - 1800000,
+    createdAt: NOW - 3600000,
+    updatedAt: NOW - 1800000,
     isOwner: true,
     contributors: [{ username: "Stephen" }, { username: "Alex" }],
   },
@@ -16,8 +18,8 @@ const HARDCODED_SESSIONS: Session[] = [
     id: "def67890",
     title: "API Integration",
     username: "Stephen",
-    createdAt: Date.now() - 86400000,
-    updatedAt: Date.now() - 43200000,
+    createdAt: NOW - 86400000,
+    updatedAt: NOW - 43200000,
     isOwner: true,
     contributors: [{ username: "Stephen" }],
   },
@@ -25,8 +27,8 @@ const HARDCODED_SESSIONS: Session[] = [
     id: "ghi11223",
     title: "Auth Flow",
     username: "Maya",
-    createdAt: Date.now() - 172800000,
-    updatedAt: Date.now() - 86400000,
+    createdAt: NOW - 172800000,
+    updatedAt: NOW - 86400000,
     isOwner: false,
     contributors: [{ username: "Maya" }, { username: "Stephen" }],
   },
@@ -34,8 +36,8 @@ const HARDCODED_SESSIONS: Session[] = [
     id: "jkl44556",
     title: "Landing Page",
     username: "Stephen",
-    createdAt: Date.now() - 259200000,
-    updatedAt: Date.now() - 172800000,
+    createdAt: NOW - 259200000,
+    updatedAt: NOW - 172800000,
     isOwner: true,
     contributors: [{ username: "Stephen" }, { username: "Jordan" }],
   },
@@ -43,8 +45,8 @@ const HARDCODED_SESSIONS: Session[] = [
     id: "mno77889",
     title: "Database Schema",
     username: "Alex",
-    createdAt: Date.now() - 345600000,
-    updatedAt: Date.now() - 259200000,
+    createdAt: NOW - 345600000,
+    updatedAt: NOW - 259200000,
     isOwner: false,
     contributors: [{ username: "Alex" }, { username: "Stephen" }],
   },

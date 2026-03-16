@@ -69,7 +69,7 @@ export default function MySessionsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 md:px-12 py-10">
+    <div className="mx-auto w-full max-w-4xl px-5 md:px-12 py-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

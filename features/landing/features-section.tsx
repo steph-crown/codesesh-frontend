@@ -19,7 +19,7 @@ const FEATURES = [
 
 export function FeaturesSection() {
   return (
-    <section className="bg-[#FBF6F2] max-md:bg-white py-16 lg:py-32 px-6 md:px-12">
+    <section className="bg-[#FBF6F2] max-md:bg-white py-16 lg:py-32 px-5 md:px-12">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-bold text-[#0A0A0A] text-center mb-4">
           Built for real-time collaboration
