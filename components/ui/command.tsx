@@ -56,12 +56,12 @@ function CommandDialog({
       </DialogHeader>
       <DialogContent
         className={cn(
-          "top-1/3 translate-y-0 overflow-hidden rounded-4xl! p-0",
+          "top-1/3 translate-y-0 overflow-hidden p-6",
           className
         )}
         showCloseButton={showCloseButton}
       >
-        <Command className="**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground">
+        <Command className="rounded-none bg-transparent p-0 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground">
           {children}
         </Command>
       </DialogContent>

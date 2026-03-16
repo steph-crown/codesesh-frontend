@@ -27,8 +27,27 @@ function getSnapshot(): boolean {
   return cachedValue;
 }
 
+let mobileOpenValue = false;
+let mobileListeners: Array<() => void> = [];
+
+function mobileSubscribe(cb: () => void) {
+  mobileListeners.push(cb);
+  return () => {
+    mobileListeners = mobileListeners.filter((l) => l !== cb);
+  };
+}
+
+function getMobileSnapshot(): boolean {
+  return mobileOpenValue;
+}
+
+function notifyMobile() {
+  mobileListeners.forEach((l) => l());
+}
+
 export function useSidebar() {
   const collapsed = useSyncExternalStore(subscribe, getSnapshot, () => false);
+  const mobileOpen = useSyncExternalStore(mobileSubscribe, getMobileSnapshot, () => false);
 
   const toggle = useCallback(() => {
     const next = !getSnapshot();
@@ -43,5 +62,10 @@ export function useSidebar() {
     notify();
   }, []);
 
-  return { collapsed, toggle, setCollapsed };
+  const setMobileOpen = useCallback((value: boolean) => {
+    mobileOpenValue = value;
+    notifyMobile();
+  }, []);
+
+  return { collapsed, toggle, setCollapsed, mobileOpen, setMobileOpen };
 }

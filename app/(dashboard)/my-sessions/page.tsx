@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
@@ -13,6 +14,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useSessions } from "@/hooks/use-sessions";
+import { useSidebar } from "@/hooks/use-sidebar";
 import {
   SessionFilters,
   type FilterValue,
@@ -23,6 +25,7 @@ export default function MySessionsPage() {
   const router = useRouter();
   const { sessions, createSession, deleteSession, renameSession } =
     useSessions();
+  const { setMobileOpen } = useSidebar();
 
   const [filter, setFilter] = useState<FilterValue>("all");
   const [search, setSearch] = useState("");
@@ -69,7 +72,22 @@ export default function MySessionsPage() {
     <div className="mx-auto w-full max-w-4xl px-6 md:px-12 py-10">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#0A0A0A]">Sessions</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-1.5 rounded-lg hover:bg-[#FAF5F0] transition-colors md:hidden"
+            aria-label="Open navigation"
+          >
+            <Image
+              src="/collapse.svg"
+              alt=""
+              width={18}
+              height={18}
+              className="rotate-180"
+            />
+          </button>
+          <h1 className="text-2xl font-bold text-[#0A0A0A]">Sessions</h1>
+        </div>
         <Button onClick={() => setCreateOpen(true)} className="h-10 px-5">
           New session
         </Button>

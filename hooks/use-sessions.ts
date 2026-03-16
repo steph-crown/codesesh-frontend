@@ -1,104 +1,67 @@
 "use client";
 
-import { useCallback, useEffect, useSyncExternalStore } from "react";
-import {
-  type Session,
-  getSessions,
-  createSession as createSessionUtil,
-  deleteSession as deleteSessionUtil,
-  renameSession as renameSessionUtil,
-  getUser,
-  saveUser,
-  migrateLegacySessions,
-  type UserProfile,
-} from "@/lib/sessions";
+import type { Session, UserProfile } from "@/lib/sessions";
 
-let listeners: Array<() => void> = [];
+const HARDCODED_SESSIONS: Session[] = [
+  {
+    id: "abc12345",
+    title: "React Dashboard",
+    username: "Stephen",
+    createdAt: Date.now() - 3600000,
+    updatedAt: Date.now() - 1800000,
+    isOwner: true,
+    contributors: [{ username: "Stephen" }, { username: "Alex" }],
+  },
+  {
+    id: "def67890",
+    title: "API Integration",
+    username: "Stephen",
+    createdAt: Date.now() - 86400000,
+    updatedAt: Date.now() - 43200000,
+    isOwner: true,
+    contributors: [{ username: "Stephen" }],
+  },
+  {
+    id: "ghi11223",
+    title: "Auth Flow",
+    username: "Maya",
+    createdAt: Date.now() - 172800000,
+    updatedAt: Date.now() - 86400000,
+    isOwner: false,
+    contributors: [{ username: "Maya" }, { username: "Stephen" }],
+  },
+  {
+    id: "jkl44556",
+    title: "Landing Page",
+    username: "Stephen",
+    createdAt: Date.now() - 259200000,
+    updatedAt: Date.now() - 172800000,
+    isOwner: true,
+    contributors: [{ username: "Stephen" }, { username: "Jordan" }],
+  },
+  {
+    id: "mno77889",
+    title: "Database Schema",
+    username: "Alex",
+    createdAt: Date.now() - 345600000,
+    updatedAt: Date.now() - 259200000,
+    isOwner: false,
+    contributors: [{ username: "Alex" }, { username: "Stephen" }],
+  },
+];
 
-function subscribe(cb: () => void) {
-  listeners.push(cb);
-  return () => {
-    listeners = listeners.filter((l) => l !== cb);
-  };
-}
-
-function notify() {
-  listeners.forEach((l) => l());
-}
-
-let snapshotCache: Session[] | null = null;
-const EMPTY_SESSIONS: Session[] = [];
-
-function getSnapshot(): Session[] {
-  if (!snapshotCache) snapshotCache = getSessions();
-  return snapshotCache;
-}
-
-function getServerSnapshot(): Session[] {
-  return EMPTY_SESSIONS;
-}
-
-function invalidate() {
-  snapshotCache = null;
-  notify();
-}
+const HARDCODED_USER: UserProfile = { username: "Stephen" };
 
 export function useSessions() {
-  useEffect(() => {
-    migrateLegacySessions();
-    invalidate();
-  }, []);
+  const sessions = HARDCODED_SESSIONS;
 
-  const sessions = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot,
-  );
-
-  const createSession = useCallback((username: string) => {
-    const session = createSessionUtil(username);
-    saveUser({ username });
-    invalidate();
-    return session;
-  }, []);
-
-  const deleteSession = useCallback((id: string) => {
-    deleteSessionUtil(id);
-    invalidate();
-  }, []);
-
-  const renameSession = useCallback((id: string, title: string) => {
-    renameSessionUtil(id, title);
-    invalidate();
-  }, []);
+  const createSession = () => sessions[0];
+  const deleteSession = () => {};
+  const renameSession = () => {};
 
   return { sessions, createSession, deleteSession, renameSession };
 }
 
-let userSnapshot: UserProfile | null | undefined = undefined;
-let userListeners: Array<() => void> = [];
-
-function userSubscribe(cb: () => void) {
-  userListeners.push(cb);
-  return () => {
-    userListeners = userListeners.filter((l) => l !== cb);
-  };
-}
-
-function getUserSnapshot(): UserProfile | null {
-  if (userSnapshot === undefined) userSnapshot = getUser();
-  return userSnapshot;
-}
-
-function getUserServerSnapshot(): UserProfile | null {
-  return null;
-}
-
 export function useUser() {
-  const user = useSyncExternalStore(
-    userSubscribe,
-    getUserSnapshot,
-    getUserServerSnapshot,
-  );
-  return user;
+  return HARDCODED_USER;
 }

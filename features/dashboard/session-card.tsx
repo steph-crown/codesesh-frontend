@@ -14,11 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarGroup,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarGroup } from "@/components/ui/avatar";
 import type { Session } from "@/lib/sessions";
 import { timeAgo } from "@/lib/time";
 
@@ -45,7 +41,7 @@ export function SessionCard({
   return (
     <Link
       href={`/sessions/${session.id}`}
-      className="group relative block rounded-[1rem] bg-white border border-[#DFDDD7] p-8 transition-shadow hover:shadow-md"
+      className="group relative block rounded-[1rem] bg-white border border-[#ededea] p-8 transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
@@ -63,7 +59,7 @@ export function SessionCard({
               e.preventDefault();
               e.stopPropagation();
             }}
-            className="opacity-0 group-hover:opacity-100 p-1.5 -m-1.5 rounded-lg hover:bg-[#FAF5F0] transition-opacity"
+            className="opacity-0 group-hover:opacity-100 p-1.5 -m-1.5 rounded-md hover:bg-[#FAF5F0] transition-opacity"
           >
             <HugeiconsIcon icon={MoreVerticalIcon} size={18} strokeWidth={2} />
           </PopoverTrigger>
@@ -71,7 +67,7 @@ export function SessionCard({
             align="end"
             side="bottom"
             sideOffset={4}
-            className="w-48 p-1.5 gap-0"
+            className="w-48 p-1.5 gap-0 rounded-lg!"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -86,7 +82,11 @@ export function SessionCard({
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors"
             >
-              <HugeiconsIcon icon={PencilEdit01Icon} size={16} strokeWidth={2} />
+              <HugeiconsIcon
+                icon={PencilEdit01Icon}
+                size={16}
+                strokeWidth={2}
+              />
               Rename
             </button>
             <button
@@ -97,7 +97,11 @@ export function SessionCard({
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors"
             >
-              <HugeiconsIcon icon={PlayCircle02Icon} size={16} strokeWidth={2} />
+              <HugeiconsIcon
+                icon={PlayCircle02Icon}
+                size={16}
+                strokeWidth={2}
+              />
               Resume session
             </button>
             <div className="my-1 h-px bg-[#E5E0DA]" />
