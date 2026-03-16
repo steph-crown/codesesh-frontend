@@ -30,7 +30,7 @@ export function HowItWorks() {
           {STEPS.map((step) => (
             <div
               key={step.num}
-              className="flex flex-col items-center text-center gap-3"
+              className="flex flex-col items-center text-center gap-3 bg-white rounded-[40px] p-8"
             >
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                 <span className="text-white text-base font-bold">
@@ -40,7 +40,7 @@ export function HowItWorks() {
               <h3 className="text-lg font-semibold text-[#0A0A0A]">
                 {step.title}
               </h3>
-              <p className="text-[#6B7280] text-sm leading-relaxed max-w-[280px]">
+              <p className="text-[#6B7280] text-sm leading-[1.4] max-w-[280px]">
                 {step.description}
               </p>
             </div>
