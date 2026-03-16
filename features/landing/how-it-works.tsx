@@ -18,18 +18,18 @@ const STEPS = [
     circleBg: "bg-primary",
     circleText: "text-white",
     titleColor: "text-[#0A0A0A]",
-    descColor: "text-[#6B7280]",
+    descColor: "text-[#22 2]",
   },
   {
     num: "3",
     title: "Code together",
     description:
       "Share the link. Your teammate joins instantly and you see each other typing live.",
-    cardBg: "bg-[#FF764D]",
+    cardBg: "bg-primary",
     circleBg: "bg-white",
     circleText: "text-primary",
-    titleColor: "text-[#0A0A0A]",
-    descColor: "text-[#6B7280]",
+    titleColor: "text-[white]",
+    descColor: "text-[white]",
   },
 ];
 

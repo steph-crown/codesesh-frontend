@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { motion, useInView } from "framer-motion"
+import { useEffect, useRef, useState } from "react";
+import { motion, useInView } from "framer-motion";
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const CODE_LINES = [
   "function greet(name: string) {",
-  '  return `Hello, ${name}!`',
+  "  return `Hello, ${name}!`",
   "}",
   "",
   'const message = greet("world")',
   "console.log(message)",
-]
+];
 
 const LINE_AUTHORS: ("alice" | "bob")[] = [
   "alice",
@@ -21,14 +21,14 @@ const LINE_AUTHORS: ("alice" | "bob")[] = [
   "bob",
   "alice",
   "bob",
-]
+];
 
-const CHAR_DELAY = 50
-const LINE_PAUSE = 600
-const END_PAUSE = 3000
-const DISPLAY_LINES = 7
+const CHAR_DELAY = 50;
+const LINE_PAUSE = 600;
+const END_PAUSE = 3000;
+const DISPLAY_LINES = 7;
 
-type CursorPos = { line: number; col: number }
+type CursorPos = { line: number; col: number };
 
 const KEYWORDS = new Set([
   "function",
@@ -47,7 +47,7 @@ const KEYWORDS = new Set([
   "typeof",
   "async",
   "await",
-])
+]);
 const TYPES = new Set([
   "string",
   "number",
@@ -57,178 +57,178 @@ const TYPES = new Set([
   "undefined",
   "any",
   "never",
-])
-const BUILTINS = new Set(["console", "Math", "Array", "Object", "Promise"])
+]);
+const BUILTINS = new Set(["console", "Math", "Array", "Object", "Promise"]);
 
 function highlightLine(text: string): React.ReactNode[] {
-  if (!text) return []
-  const result: React.ReactNode[] = []
-  let pos = 0
+  if (!text) return [];
+  const result: React.ReactNode[] = [];
+  let pos = 0;
 
   while (pos < text.length) {
     if (/\s/.test(text[pos])) {
-      let end = pos
-      while (end < text.length && /\s/.test(text[end])) end++
-      result.push(<span key={pos}>{text.slice(pos, end)}</span>)
-      pos = end
-      continue
+      let end = pos;
+      while (end < text.length && /\s/.test(text[end])) end++;
+      result.push(<span key={pos}>{text.slice(pos, end)}</span>);
+      pos = end;
+      continue;
     }
 
     if (text[pos] === "`" || text[pos] === '"' || text[pos] === "'") {
-      const quote = text[pos]
-      let end = pos + 1
+      const quote = text[pos];
+      let end = pos + 1;
       while (end < text.length && text[end] !== quote) {
-        if (text[end] === "\\") end++
-        end++
+        if (text[end] === "\\") end++;
+        end++;
       }
-      if (end < text.length) end++
+      if (end < text.length) end++;
       result.push(
         <span key={pos} className="text-[#86EFAC]">
           {text.slice(pos, end)}
-        </span>
-      )
-      pos = end
-      continue
+        </span>,
+      );
+      pos = end;
+      continue;
     }
 
     if (/[a-zA-Z_$]/.test(text[pos])) {
-      let end = pos
-      while (end < text.length && /[a-zA-Z0-9_$]/.test(text[end])) end++
-      const word = text.slice(pos, end)
+      let end = pos;
+      while (end < text.length && /[a-zA-Z0-9_$]/.test(text[end])) end++;
+      const word = text.slice(pos, end);
 
       if (KEYWORDS.has(word)) {
         result.push(
           <span key={pos} className="text-[#C084FC]">
             {word}
-          </span>
-        )
+          </span>,
+        );
       } else if (TYPES.has(word)) {
         result.push(
           <span key={pos} className="text-[#67E8F9]">
             {word}
-          </span>
-        )
+          </span>,
+        );
       } else if (BUILTINS.has(word)) {
         result.push(
           <span key={pos} className="text-[#FCD34D]">
             {word}
-          </span>
-        )
+          </span>,
+        );
       } else if (end < text.length && text[end] === "(") {
         result.push(
           <span key={pos} className="text-[#93C5FD]">
             {word}
-          </span>
-        )
+          </span>,
+        );
       } else {
         result.push(
           <span key={pos} className="text-gray-200">
             {word}
-          </span>
-        )
+          </span>,
+        );
       }
-      pos = end
-      continue
+      pos = end;
+      continue;
     }
 
     if (/\d/.test(text[pos])) {
-      let end = pos
-      while (end < text.length && /[\d.]/.test(text[end])) end++
+      let end = pos;
+      while (end < text.length && /[\d.]/.test(text[end])) end++;
       result.push(
         <span key={pos} className="text-[#FCD34D]">
           {text.slice(pos, end)}
-        </span>
-      )
-      pos = end
-      continue
+        </span>,
+      );
+      pos = end;
+      continue;
     }
 
     result.push(
       <span key={pos} className="text-gray-400">
         {text[pos]}
-      </span>
-    )
-    pos++
+      </span>,
+    );
+    pos++;
   }
 
-  return result
+  return result;
 }
 
 export function LiveDemo() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const isInView = useInView(sectionRef, { amount: 0.3 })
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { amount: 0.3 });
 
-  const [completedLines, setCompletedLines] = useState<string[]>([])
-  const [currentLineText, setCurrentLineText] = useState("")
-  const [currentLineIndex, setCurrentLineIndex] = useState(0)
-  const [activeUser, setActiveUser] = useState<"alice" | "bob">("alice")
+  const [completedLines, setCompletedLines] = useState<string[]>([]);
+  const [currentLineText, setCurrentLineText] = useState("");
+  const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [activeUser, setActiveUser] = useState<"alice" | "bob">("alice");
   const [aliceCursor, setAliceCursor] = useState<CursorPos>({
     line: 0,
     col: 0,
-  })
-  const [bobCursor, setBobCursor] = useState<CursorPos>({ line: 0, col: 0 })
+  });
+  const [bobCursor, setBobCursor] = useState<CursorPos>({ line: 0, col: 0 });
 
   useEffect(() => {
-    if (!isInView) return
+    if (!isInView) return;
 
-    let cancelled = false
+    let cancelled = false;
 
     async function animate() {
       while (!cancelled) {
-        setCompletedLines([])
-        setCurrentLineText("")
-        setCurrentLineIndex(0)
-        setActiveUser("alice")
-        setAliceCursor({ line: 0, col: 0 })
-        setBobCursor({ line: 0, col: 0 })
+        setCompletedLines([]);
+        setCurrentLineText("");
+        setCurrentLineIndex(0);
+        setActiveUser("alice");
+        setAliceCursor({ line: 0, col: 0 });
+        setBobCursor({ line: 0, col: 0 });
 
-        await sleep(400)
+        await sleep(400);
 
         for (let li = 0; li < CODE_LINES.length; li++) {
-          if (cancelled) return
-          const line = CODE_LINES[li]
-          const author = LINE_AUTHORS[li]
+          if (cancelled) return;
+          const line = CODE_LINES[li];
+          const author = LINE_AUTHORS[li];
 
-          setActiveUser(author)
-          setCurrentLineIndex(li)
+          setActiveUser(author);
+          setCurrentLineIndex(li);
 
           for (let ci = 0; ci <= line.length; ci++) {
-            if (cancelled) return
-            setCurrentLineText(line.slice(0, ci))
+            if (cancelled) return;
+            setCurrentLineText(line.slice(0, ci));
 
-            const pos = { line: li, col: ci }
-            if (author === "alice") setAliceCursor(pos)
-            else setBobCursor(pos)
+            const pos = { line: li, col: ci };
+            if (author === "alice") setAliceCursor(pos);
+            else setBobCursor(pos);
 
             if (ci < line.length) {
-              await sleep(CHAR_DELAY + Math.random() * 30)
+              await sleep(CHAR_DELAY + Math.random() * 30);
             }
           }
 
-          setCompletedLines((prev) => [...prev, line])
-          setCurrentLineText("")
+          setCompletedLines((prev) => [...prev, line]);
+          setCurrentLineText("");
 
           if (li < CODE_LINES.length - 1) {
-            await sleep(LINE_PAUSE)
+            await sleep(LINE_PAUSE);
           }
         }
 
-        await sleep(END_PAUSE)
+        await sleep(END_PAUSE);
       }
     }
 
-    animate()
+    animate();
     return () => {
-      cancelled = true
-    }
-  }, [isInView])
+      cancelled = true;
+    };
+  }, [isInView]);
 
-  const displayLines: string[] = [...completedLines]
+  const displayLines: string[] = [...completedLines];
   if (currentLineIndex >= completedLines.length) {
-    displayLines.push(currentLineText)
+    displayLines.push(currentLineText);
   }
   while (displayLines.length < DISPLAY_LINES) {
-    displayLines.push("")
+    displayLines.push("");
   }
 
   return (
@@ -270,7 +270,7 @@ export function LiveDemo() {
         />
       </motion.div>
     </section>
-  )
+  );
 }
 
 function EditorShell({
@@ -282,20 +282,20 @@ function EditorShell({
   activeUser,
   completedCount,
 }: {
-  userName: string
-  userColor: string
-  lines: string[]
-  aliceCursor: CursorPos
-  bobCursor: CursorPos
-  activeUser: "alice" | "bob"
-  completedCount: number
+  userName: string;
+  userColor: string;
+  lines: string[];
+  aliceCursor: CursorPos;
+  bobCursor: CursorPos;
+  activeUser: "alice" | "bob";
+  completedCount: number;
 }) {
   return (
     <div className="rounded-xl bg-[#0B1120] overflow-hidden border border-white/[0.06]">
       <div className="flex items-center justify-between px-4 h-10 border-b border-white/[0.08]">
         <div className="flex items-center gap-2">
           <div
-            className="w-2 h-2 rounded-sm"
+            className="w-2 h-2 rounded-[2px]"
             style={{ backgroundColor: userColor }}
           />
           <span className="text-xs font-medium text-gray-100">{userName}</span>
@@ -306,11 +306,11 @@ function EditorShell({
       <div className="p-4 font-mono text-[13px] leading-6 min-h-[196px]">
         {lines.map((line, i) => {
           const cursorsOnLine: {
-            col: number
-            color: string
-            label: string
-            active: boolean
-          }[] = []
+            col: number;
+            color: string;
+            label: string;
+            active: boolean;
+          }[] = [];
 
           if (aliceCursor.line === i) {
             cursorsOnLine.push({
@@ -318,7 +318,7 @@ function EditorShell({
               color: "#ff3c00",
               label: "Alice",
               active: activeUser === "alice" && i === completedCount,
-            })
+            });
           }
           if (bobCursor.line === i) {
             cursorsOnLine.push({
@@ -326,7 +326,7 @@ function EditorShell({
               color: "#3B82F6",
               label: "Bob",
               active: activeUser === "bob" && i === completedCount,
-            })
+            });
           }
 
           return (
@@ -356,9 +356,9 @@ function EditorShell({
                 ))}
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
