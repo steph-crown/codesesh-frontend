@@ -12,7 +12,10 @@ import { Avatar, AvatarFallback, AvatarGroup } from "@/components/ui/avatar";
 import type { Session } from "@/lib/sessions";
 import { getColorForUser } from "@/lib/colors";
 import { LanguageSelector } from "./language-selector";
-import { ConnectionIndicator, type ConnectionStatus } from "./connection-indicator";
+import {
+  ConnectionIndicator,
+  type ConnectionStatus,
+} from "./connection-indicator";
 import { PingMenu } from "./ping-menu";
 import { ShareDialog } from "./share-dialog";
 
@@ -78,7 +81,7 @@ export function SessionToolbar({
 
           <button
             onClick={onRun}
-            className="ml-1 flex items-center gap-1.5 rounded-md bg-[#16A34A] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#15803D]"
+            className="ml-1 flex items-center gap-1.5 bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/60 rounded-full"
           >
             <HugeiconsIcon icon={PlayIcon} size={12} strokeWidth={2.5} />
             Run
@@ -116,10 +119,7 @@ export function SessionToolbar({
 
           <div className="h-4 w-px bg-white/10" />
 
-          <PingMenu
-            contributors={session.contributors}
-            onPing={() => {}}
-          />
+          <PingMenu contributors={session.contributors} onPing={() => {}} />
 
           <div className="h-4 w-px bg-white/10" />
 
