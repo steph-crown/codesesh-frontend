@@ -5,7 +5,7 @@ const FEATURES = [
   },
   {
     title: "Live Cursors",
-    body: "See exactly where your teammate is typing with named, color-coded cursor bars that update in real time. No more asking \"where are you?\" — just look at the editor.",
+    body: 'See exactly where your teammate is typing with named, color-coded cursor bars that update in real time. No more asking "where are you?" — just look at the editor.',
   },
   {
     title: "Share a URL, Done",
@@ -15,7 +15,7 @@ const FEATURES = [
     title: "Multi-language Support",
     body: "TypeScript, Rust, Python, Go, JavaScript and more. Pick a language and the Monaco-powered editor highlights syntax automatically. Switch anytime with a single click.",
   },
-]
+];
 
 export function FeaturesSection() {
   return (
@@ -35,7 +35,7 @@ export function FeaturesSection() {
                 key={f.title}
                 className="bg-[#FAF5F0] rounded-[40px] p-8 sm:p-10"
               >
-                <h3 className="text-xl sm:text-[22px] font-semibold text-[#0A0A0A]">
+                <h3 className="text-xl sm:text-[22px] font-semibold text-primary">
                   {f.title}
                 </h3>
                 <div className="h-px bg-[#E5E0DA] my-4" />
@@ -48,5 +48,5 @@ export function FeaturesSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
