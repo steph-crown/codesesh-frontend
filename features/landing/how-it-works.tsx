@@ -35,7 +35,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-[#FBF6F2] py-32 px-6 md:px-12 ">
+    <section className="bg-[#FBF6F2] py-16 lg:py-32 px-6 md:px-12 ">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-bold text-[#0A0A0A] text-center mb-14">
           Up and running in 3&nbsp;steps
