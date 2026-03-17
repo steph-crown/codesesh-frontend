@@ -40,12 +40,14 @@ export function SessionToolbar({
   language,
   onLanguageChange,
   onRun,
+  running = false,
   connectionStatus = "connected",
 }: {
   session: Session;
   language: string;
   onLanguageChange: (lang: string) => void;
   onRun: () => void;
+  running?: boolean;
   connectionStatus?: ConnectionStatus;
 }) {
   const router = useRouter();
@@ -88,10 +90,20 @@ export function SessionToolbar({
 
           <button
             onClick={onRun}
-            className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/60"
+            disabled={running}
+            className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/60 disabled:opacity-50"
           >
-            <HugeiconsIcon icon={PlayIcon} size={12} strokeWidth={2.5} />
-            Run
+            {running ? (
+              <>
+                <span className="inline-block size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Running
+              </>
+            ) : (
+              <>
+                <HugeiconsIcon icon={PlayIcon} size={12} strokeWidth={2.5} />
+                Run
+              </>
+            )}
           </button>
         </div>
 

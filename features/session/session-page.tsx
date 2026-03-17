@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CommandLineIcon } from "@hugeicons/core-free-icons";
 import { SessionToolbar } from "./session-toolbar";
-import { EditorPanel } from "./editor-panel";
-import { TerminalPanel } from "./terminal-panel";
+import { EditorPanel, type EditorPanelHandle } from "./editor-panel";
+import { TerminalPanel, type TerminalLine } from "./terminal-panel";
 import { ChatPanel } from "./chat-panel";
+import { LANGUAGES } from "./language-selector";
 
 type MobileTab = "editor" | "terminal" | "chat";
 
@@ -183,6 +184,9 @@ export function SessionPage({
   const [language, setLanguage] = useState("typescript");
   const [mobileTab, setMobileTab] = useState<MobileTab>("editor");
   const [chatMessages, setChatMessages] = useState(messages);
+  const [terminalLines, setTerminalLines] = useState<TerminalLine[]>([]);
+  const [running, setRunning] = useState(false);
+  const codeEditorRef = useRef<EditorPanelHandle>(null);
 
   const [terminalCollapsed, setTerminalCollapsed] = useState(() =>
     isClient() ? storageBool(V_COLLAPSED_KEY, false) : false,
@@ -279,6 +283,74 @@ export function SessionPage({
     });
   }
 
+  async function runCode() {
+    const code = codeEditorRef.current?.getCode();
+    if (!code?.trim()) return;
+
+    const langLabel =
+      LANGUAGES.find((l) => l.id === language)?.label ?? language;
+
+    setRunning(true);
+    setTerminalLines([
+      { type: "system", text: `$ Running ${langLabel}...` },
+    ]);
+
+    if (termCollapsedRef.current) {
+      expandTerminal();
+    }
+
+    try {
+      const res = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, language }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setTerminalLines((prev) => [
+          ...prev,
+          { type: "stderr", text: data.error ?? "Execution failed" },
+        ]);
+        return;
+      }
+
+      const lines: TerminalLine[] = [
+        { type: "system", text: `$ Running ${langLabel}...` },
+      ];
+
+      if (data.stdout) {
+        for (const line of data.stdout.split("\n")) {
+          lines.push({ type: "stdout", text: line });
+        }
+      }
+      if (data.stderr) {
+        for (const line of data.stderr.split("\n")) {
+          if (line.trim()) lines.push({ type: "stderr", text: line });
+        }
+      }
+
+      lines.push({ type: "stdout", text: "" });
+      lines.push({
+        type: "system",
+        text:
+          data.exitCode === 0
+            ? "Process exited with code 0"
+            : `Process exited with code ${data.exitCode}`,
+      });
+
+      setTerminalLines(lines);
+    } catch {
+      setTerminalLines((prev) => [
+        ...prev,
+        { type: "stderr", text: "Failed to connect to execution server" },
+      ]);
+    } finally {
+      setRunning(false);
+    }
+  }
+
   function handleSendMessage(content: string, mentions: string[]) {
     setChatMessages((prev) => [
       ...prev,
@@ -298,15 +370,24 @@ export function SessionPage({
         session={session}
         language={language}
         onLanguageChange={setLanguage}
-        onRun={() => {}}
+        onRun={runCode}
+        running={running}
       />
 
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />
 
       {/* Mobile panels */}
       <div className="flex-1 overflow-hidden p-2 md:hidden">
-        {mobileTab === "editor" && <EditorPanel language={language} />}
-        {mobileTab === "terminal" && <TerminalPanel />}
+        {mobileTab === "editor" && (
+          <EditorPanel ref={codeEditorRef} language={language} />
+        )}
+        {mobileTab === "terminal" && (
+          <TerminalPanel
+            lines={terminalLines}
+            running={running}
+            onClear={() => setTerminalLines([])}
+          />
+        )}
         {mobileTab === "chat" && (
           <ChatPanel
             messages={chatMessages}
@@ -335,7 +416,7 @@ export function SessionPage({
             )}
             style={terminalCollapsed ? undefined : { height: `${DEFAULT_V}%` }}
           >
-            <EditorPanel language={language} />
+            <EditorPanel ref={codeEditorRef} language={language} />
           </div>
 
           <DragHandle
@@ -352,7 +433,11 @@ export function SessionPage({
             />
           ) : (
             <div className="flex-1 overflow-hidden">
-              <TerminalPanel />
+              <TerminalPanel
+                lines={terminalLines}
+                running={running}
+                onClear={() => setTerminalLines([])}
+              />
             </div>
           )}
         </div>
