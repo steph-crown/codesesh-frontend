@@ -27,6 +27,7 @@ const DEFAULT_CODE: Record<string, string> = {
 
 console.log(twoSum([2, 7, 11, 15], 9));
 console.log(twoSum([3, 2, 4], 6));`,
+
   javascript: `function twoSum(nums, target) {
   const map = new Map();
 
@@ -43,6 +44,7 @@ console.log(twoSum([3, 2, 4], 6));`,
 
 console.log(twoSum([2, 7, 11, 15], 9));
 console.log(twoSum([3, 2, 4], 6));`,
+
   python: `def two_sum(nums: list[int], target: int) -> list[int]:
     seen = {}
     for i, num in enumerate(nums):
@@ -54,26 +56,7 @@ console.log(twoSum([3, 2, 4], 6));`,
 
 print(two_sum([2, 7, 11, 15], 9))
 print(two_sum([3, 2, 4], 6))`,
-  rust: `use std::collections::HashMap;
 
-fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
-    let mut map = HashMap::new();
-
-    for (i, &num) in nums.iter().enumerate() {
-        let complement = target - num;
-        if let Some(&j) = map.get(&complement) {
-            return vec![j as i32, i as i32];
-        }
-        map.insert(num, i);
-    }
-
-    vec![]
-}
-
-fn main() {
-    println!("{:?}", two_sum(vec![2, 7, 11, 15], 9));
-    println!("{:?}", two_sum(vec![3, 2, 4], 6));
-}`,
   go: `package main
 
 import "fmt"
@@ -96,6 +79,299 @@ func main() {
     fmt.Println(twoSum([]int{2, 7, 11, 15}, 9))
     fmt.Println(twoSum([]int{3, 2, 4}, 6))
 }`,
+
+  rust: `use std::collections::HashMap;
+
+fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
+    let mut map = HashMap::new();
+
+    for (i, &num) in nums.iter().enumerate() {
+        let complement = target - num;
+        if let Some(&j) = map.get(&complement) {
+            return vec![j as i32, i as i32];
+        }
+        map.insert(num, i);
+    }
+
+    vec![]
+}
+
+fn main() {
+    println!("{:?}", two_sum(vec![2, 7, 11, 15], 9));
+    println!("{:?}", two_sum(vec![3, 2, 4], 6));
+}`,
+
+  cpp: `#include <iostream>
+#include <vector>
+#include <unordered_map>
+
+using namespace std;
+
+vector<int> twoSum(vector<int>& nums, int target) {
+    unordered_map<int, int> seen;
+
+    for (int i = 0; i < nums.size(); i++) {
+        int complement = target - nums[i];
+        if (seen.count(complement)) {
+            return {seen[complement], i};
+        }
+        seen[nums[i]] = i;
+    }
+
+    return {};
+}
+
+int main() {
+    vector<int> nums1 = {2, 7, 11, 15};
+    auto r1 = twoSum(nums1, 9);
+    cout << "[" << r1[0] << ", " << r1[1] << "]" << endl;
+
+    vector<int> nums2 = {3, 2, 4};
+    auto r2 = twoSum(nums2, 6);
+    cout << "[" << r2[0] << ", " << r2[1] << "]" << endl;
+
+    return 0;
+}`,
+
+  c: `#include <stdio.h>
+#include <stdlib.h>
+
+int* twoSum(int* nums, int numsSize, int target, int* returnSize) {
+    int* result = malloc(2 * sizeof(int));
+    *returnSize = 2;
+
+    for (int i = 0; i < numsSize; i++) {
+        for (int j = i + 1; j < numsSize; j++) {
+            if (nums[i] + nums[j] == target) {
+                result[0] = i;
+                result[1] = j;
+                return result;
+            }
+        }
+    }
+
+    *returnSize = 0;
+    return result;
+}
+
+int main() {
+    int nums1[] = {2, 7, 11, 15};
+    int size;
+    int* r1 = twoSum(nums1, 4, 9, &size);
+    printf("[%d, %d]\\n", r1[0], r1[1]);
+    free(r1);
+
+    int nums2[] = {3, 2, 4};
+    int* r2 = twoSum(nums2, 3, 6, &size);
+    printf("[%d, %d]\\n", r2[0], r2[1]);
+    free(r2);
+
+    return 0;
+}`,
+
+  csharp: `using System;
+using System.Collections.Generic;
+
+int[] TwoSum(int[] nums, int target) {
+    var seen = new Dictionary<int, int>();
+
+    for (int i = 0; i < nums.Length; i++) {
+        int complement = target - nums[i];
+        if (seen.ContainsKey(complement)) {
+            return new int[] { seen[complement], i };
+        }
+        seen[nums[i]] = i;
+    }
+
+    return Array.Empty<int>();
+}
+
+var r1 = TwoSum(new[] { 2, 7, 11, 15 }, 9);
+Console.WriteLine($"[{r1[0]}, {r1[1]}]");
+
+var r2 = TwoSum(new[] { 3, 2, 4 }, 6);
+Console.WriteLine($"[{r2[0]}, {r2[1]}]");`,
+
+  java: `import java.util.HashMap;
+import java.util.Arrays;
+
+class Main {
+    public static int[] twoSum(int[] nums, int target) {
+        HashMap<Integer, Integer> seen = new HashMap<>();
+
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            if (seen.containsKey(complement)) {
+                return new int[] { seen.get(complement), i };
+            }
+            seen.put(nums[i], i);
+        }
+
+        return new int[] {};
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Arrays.toString(twoSum(new int[] {2, 7, 11, 15}, 9)));
+        System.out.println(Arrays.toString(twoSum(new int[] {3, 2, 4}, 6)));
+    }
+}`,
+
+  kotlin: `fun twoSum(nums: IntArray, target: Int): IntArray {
+    val seen = mutableMapOf<Int, Int>()
+
+    for (i in nums.indices) {
+        val complement = target - nums[i]
+        if (complement in seen) {
+            return intArrayOf(seen[complement]!!, i)
+        }
+        seen[nums[i]] = i
+    }
+
+    return intArrayOf()
+}
+
+fun main() {
+    println(twoSum(intArrayOf(2, 7, 11, 15), 9).contentToString())
+    println(twoSum(intArrayOf(3, 2, 4), 6).contentToString())
+}`,
+
+  swift: `func twoSum(_ nums: [Int], _ target: Int) -> [Int] {
+    var seen = [Int: Int]()
+
+    for (i, num) in nums.enumerated() {
+        let complement = target - num
+        if let j = seen[complement] {
+            return [j, i]
+        }
+        seen[num] = i
+    }
+
+    return []
+}
+
+print(twoSum([2, 7, 11, 15], 9))
+print(twoSum([3, 2, 4], 6))`,
+
+  ruby: `def two_sum(nums, target)
+  seen = {}
+
+  nums.each_with_index do |num, i|
+    complement = target - num
+    if seen.key?(complement)
+      return [seen[complement], i]
+    end
+    seen[num] = i
+  end
+
+  []
+end
+
+puts two_sum([2, 7, 11, 15], 9).inspect
+puts two_sum([3, 2, 4], 6).inspect`,
+
+  php: `<?php
+
+function twoSum(array $nums, int $target): array {
+    $seen = [];
+
+    foreach ($nums as $i => $num) {
+        $complement = $target - $num;
+        if (isset($seen[$complement])) {
+            return [$seen[$complement], $i];
+        }
+        $seen[$num] = $i;
+    }
+
+    return [];
+}
+
+print_r(twoSum([2, 7, 11, 15], 9));
+print_r(twoSum([3, 2, 4], 6));`,
+
+  dart: `List<int> twoSum(List<int> nums, int target) {
+  final seen = <int, int>{};
+
+  for (var i = 0; i < nums.length; i++) {
+    final complement = target - nums[i];
+    if (seen.containsKey(complement)) {
+      return [seen[complement]!, i];
+    }
+    seen[nums[i]] = i;
+  }
+
+  return [];
+}
+
+void main() {
+  print(twoSum([2, 7, 11, 15], 9));
+  print(twoSum([3, 2, 4], 6));
+}`,
+
+  scala: `object Main {
+  def twoSum(nums: Array[Int], target: Int): Array[Int] = {
+    val seen = scala.collection.mutable.Map[Int, Int]()
+
+    for (i <- nums.indices) {
+      val complement = target - nums(i)
+      if (seen.contains(complement)) {
+        return Array(seen(complement), i)
+      }
+      seen(nums(i)) = i
+    }
+
+    Array.empty
+  }
+
+  def main(args: Array[String]): Unit = {
+    println(twoSum(Array(2, 7, 11, 15), 9).mkString("[", ", ", "]"))
+    println(twoSum(Array(3, 2, 4), 6).mkString("[", ", ", "]"))
+  }
+}`,
+
+  elixir: `defmodule TwoSum do
+  def solve(nums, target) do
+    nums
+    |> Enum.with_index()
+    |> Enum.reduce_while(%{}, fn {num, i}, seen ->
+      complement = target - num
+      case Map.get(seen, complement) do
+        nil -> {:cont, Map.put(seen, num, i)}
+        j -> {:halt, [j, i]}
+      end
+    end)
+  end
+end
+
+IO.inspect(TwoSum.solve([2, 7, 11, 15], 9))
+IO.inspect(TwoSum.solve([3, 2, 4], 6))`,
+
+  erlang: `main(_) ->
+    io:format("~p~n", [two_sum([2, 7, 11, 15], 9, #{})]),
+    io:format("~p~n", [two_sum([3, 2, 4], 6, #{})]).
+
+two_sum([], _Target, _Seen) -> [];
+two_sum([Num | Rest], Target, Seen) ->
+    Complement = Target - Num,
+    case maps:find(Complement, Seen) of
+        {ok, J} -> [J, maps:size(Seen)];
+        error -> two_sum(Rest, Target, Seen#{Num => maps:size(Seen)})
+    end.`,
+
+  racket: `#lang racket
+
+(define (two-sum nums target)
+  (let loop ([lst nums] [i 0] [seen (hash)])
+    (cond
+      [(null? lst) '()]
+      [else
+       (let* ([num (car lst)]
+              [complement (- target num)])
+         (if (hash-has-key? seen complement)
+             (list (hash-ref seen complement) i)
+             (loop (cdr lst) (+ i 1) (hash-set seen num i))))])))
+
+(displayln (two-sum '(2 7 11 15) 9))
+(displayln (two-sum '(3 2 4) 6))`,
 };
 
 export const EditorPanel = forwardRef<

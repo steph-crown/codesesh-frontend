@@ -4,12 +4,13 @@ import { writeFile, unlink, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 15_000;
 
 type LangConfig = {
   ext: string;
   run: (file: string) => { cmd: string; args: string[] };
   compile?: (file: string, out: string) => { cmd: string; args: string[] };
+  filename?: string;
 };
 
 const LANGUAGES: Record<string, LangConfig> = {
@@ -34,6 +35,62 @@ const LANGUAGES: Record<string, LangConfig> = {
     compile: (f, out) => ({ cmd: "rustc", args: [f, "-o", out] }),
     run: (f) => ({ cmd: f, args: [] }),
   },
+  cpp: {
+    ext: ".cpp",
+    compile: (f, out) => ({ cmd: "g++", args: ["-std=c++20", "-o", out, f] }),
+    run: (f) => ({ cmd: f, args: [] }),
+  },
+  c: {
+    ext: ".c",
+    compile: (f, out) => ({ cmd: "gcc", args: ["-std=c17", "-o", out, f] }),
+    run: (f) => ({ cmd: f, args: [] }),
+  },
+  csharp: {
+    ext: ".cs",
+    run: (f) => ({ cmd: "dotnet-script", args: [f] }),
+  },
+  java: {
+    ext: ".java",
+    filename: "Main.java",
+    run: (f) => ({ cmd: "java", args: [f] }),
+  },
+  kotlin: {
+    ext: ".kt",
+    compile: (f, out) => ({ cmd: "kotlinc", args: [f, "-include-runtime", "-d", `${out}.jar`] }),
+    run: (f) => ({ cmd: "java", args: ["-jar", `${f}.jar`] }),
+  },
+  swift: {
+    ext: ".swift",
+    run: (f) => ({ cmd: "swift", args: [f] }),
+  },
+  ruby: {
+    ext: ".rb",
+    run: (f) => ({ cmd: "ruby", args: [f] }),
+  },
+  php: {
+    ext: ".php",
+    run: (f) => ({ cmd: "php", args: [f] }),
+  },
+  dart: {
+    ext: ".dart",
+    run: (f) => ({ cmd: "dart", args: ["run", f] }),
+  },
+  scala: {
+    ext: ".scala",
+    run: (f) => ({ cmd: "scala", args: [f] }),
+  },
+  elixir: {
+    ext: ".exs",
+    run: (f) => ({ cmd: "elixir", args: [f] }),
+  },
+  erlang: {
+    ext: ".erl",
+    run: (f) => ({ cmd: "escript", args: [f] }),
+  },
+  racket: {
+    ext: ".rkt",
+    run: (f) => ({ cmd: "racket", args: [f] }),
+  },
 };
 
 function exec(
@@ -43,7 +100,12 @@ function exec(
 ): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
     execFile(cmd, args, { timeout, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
-      const code = err ? (err as NodeJS.ErrnoException & { code?: string | number }).code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" ? 1 : (err as { status?: number }).status ?? 1 : 0;
+      const code = err
+        ? (err as NodeJS.ErrnoException & { code?: string | number }).code ===
+          "ERR_CHILD_PROCESS_STDIO_MAXBUFFER"
+          ? 1
+          : (err as { status?: number }).status ?? 1
+        : 0;
       resolve({ stdout: stdout ?? "", stderr: stderr ?? "", code: Number(code) });
     });
   });
@@ -69,7 +131,8 @@ export async function POST(request: Request) {
     }
 
     const dir = await mkdtemp(join(tmpdir(), "codesesh-"));
-    const srcFile = join(dir, `main${config.ext}`);
+    const filename = config.filename ?? `main${config.ext}`;
+    const srcFile = join(dir, filename);
     await writeFile(srcFile, code, "utf-8");
 
     const cleanup = async () => {
