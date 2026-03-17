@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Figtree, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 const jetbrainsMono = JetBrains_Mono({
@@ -24,7 +25,10 @@ export default function RootLayout({
       lang="en"
       className={cn("font-sans", figtree.variable, jetbrainsMono.variable)}
     >
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <Toaster position="bottom-center" />
+      </body>
     </html>
   );
 }

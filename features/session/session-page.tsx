@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect } from "react";
+import { useState, useRef, useCallback, useLayoutEffect, useEffect } from "react";
 import type { Session, ChatMessage } from "@/lib/sessions";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CommandLineIcon } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 import { SessionToolbar } from "./session-toolbar";
 import { EditorPanel, type EditorPanelHandle } from "./editor-panel";
 import { TerminalPanel, type TerminalLine } from "./terminal-panel";
@@ -213,6 +214,19 @@ export function SessionPage({
     if (editorRef.current && !termCollapsedRef.current) {
       editorRef.current.style.height = `${vRef.current}%`;
     }
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        toast.success("Already saved", {
+          description: "Your code is saved automatically.",
+        });
+      }
+    }
+    globalThis.addEventListener("keydown", handleKeyDown);
+    return () => globalThis.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const hDragRef = useRef((delta: number) => {
