@@ -4,9 +4,10 @@ import { persist } from "zustand/middleware";
 interface UserStore {
   userId: string | null;
   displayName: string | null;
+  color: string | null;
   _hasHydrated: boolean;
 
-  setUser: (id: string, name: string) => void;
+  setUser: (id: string, name: string, color: string) => void;
   clear: () => void;
   setHasHydrated: (v: boolean) => void;
 
@@ -21,10 +22,12 @@ export const useUserStore = create<UserStore>()(
     (set, get) => ({
       userId: null,
       displayName: null,
+      color: null,
       _hasHydrated: false,
 
-      setUser: (id, name) => set({ userId: id, displayName: name }),
-      clear: () => set({ userId: null, displayName: null }),
+      setUser: (id, name, color) =>
+        set({ userId: id, displayName: name, color }),
+      clear: () => set({ userId: null, displayName: null, color: null }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
 
       pendingAction: null,
@@ -41,6 +44,7 @@ export const useUserStore = create<UserStore>()(
       partialize: (state) => ({
         userId: state.userId,
         displayName: state.displayName,
+        color: state.color,
       }),
       onRehydrateStorage: () => (_state, error) => {
         if (!error) {

@@ -22,6 +22,7 @@ export interface SessionDetail extends SessionSummary {
 export interface Participant {
   user_id: string;
   display_name: string;
+  color: string;
   joined_at: string;
   is_active: boolean;
 }
@@ -31,6 +32,7 @@ export interface ChatMessage {
   session_id: string;
   user_id: string;
   display_name: string;
+  color: string;
   content: string;
   created_at: string;
 }
@@ -48,10 +50,14 @@ export interface MessageHistory {
   has_more: boolean;
 }
 
-export interface CreateUserResponse {
+export interface UserResponse {
   id: string;
   display_name: string;
+  color: string;
+  created_at: string;
 }
+
+export type CreateUserResponse = UserResponse;
 
 export interface GetSessionsQuery {
   search?: string;

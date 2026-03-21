@@ -4,6 +4,7 @@ import { use, useEffect } from "react";
 import { useSession, useJoinSession } from "@/hooks/use-sessions";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useUserStore } from "@/stores/user-store";
+import { Spinner } from "@/components/ui/spinner";
 import { SessionPage } from "@/features/session/session-page";
 
 export default function SessionRoute({
@@ -35,7 +36,7 @@ export default function SessionRoute({
   if (!hasHydrated || isLoading) {
     return (
       <div className="dark flex size-full items-center justify-center bg-[#020617]">
-        <span className="inline-block size-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        <Spinner className="size-6 text-white/60" />
       </div>
     );
   }
@@ -53,7 +54,9 @@ export default function SessionRoute({
   if (error) {
     return (
       <div className="dark flex size-full flex-col items-center justify-center gap-2 bg-[#020617]">
-        <p className="text-lg font-medium text-[#F9FAFB]">Session not found</p>
+        <p className="text-lg font-medium text-[#F9FAFB]">
+          Session not found
+        </p>
         <p className="text-sm text-[#9CA3AF]">
           This session may have been deleted or you don&apos;t have access.
         </p>

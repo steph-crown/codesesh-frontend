@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -10,40 +11,76 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useRequireAuth } from "@/hooks/use-require-auth";
+import { toast } from "sonner";
 import { useCreateSession } from "@/hooks/use-sessions";
+import { useUserStore } from "@/stores/user-store";
+import { api } from "@/lib/api";
+import { PALETTE } from "@/lib/colors";
+import { generateSessionName } from "@/lib/session-names";
+import { extractSessionCode } from "@/lib/join-code";
+
+function randomColorName() {
+  return PALETTE[Math.floor(Math.random() * PALETTE.length)].name;
+}
 
 export function HeroSection() {
   const router = useRouter();
-  const requireAuth = useRequireAuth();
+  const userId = useUserStore((s) => s.userId);
+  const setUser = useUserStore((s) => s.setUser);
   const createSession = useCreateSession();
-  const [joinOpen, setJoinOpen] = useState(false);
-  const [sessionId, setSessionId] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [sessionName, setSessionName] = useState("");
 
-  function handleCreate() {
-    const name = sessionName.trim();
-    if (!name) return;
-    setCreateOpen(false);
-    setSessionName("");
+  const [displayName, setDisplayName] = useState("");
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const [joinInput, setJoinInput] = useState("");
+
+  async function handleCreate() {
+    if (!userId) {
+      const trimmed = displayName.trim();
+      if (!trimmed) {
+        toast.error("Please enter your name to continue.");
+        return;
+      }
+
+      setCreatingUser(true);
+      try {
+        const user = await api.users.create(trimmed, randomColorName());
+        setUser(user.id, user.display_name, user.color);
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to create user",
+        );
+        setCreatingUser(false);
+        return;
+      }
+      setCreatingUser(false);
+    }
+
     createSession.mutate(
-      { name, language: "typescript" },
+      { name: generateSessionName(), language: "typescript" },
       {
         onSuccess: (session) => {
-          router.push(`/sessions/${session.id}`);
+          setDisplayName("");
+          router.push(`/sessions/${session.short_id}`);
         },
       },
     );
   }
 
   function handleJoin() {
-    const sid = sessionId.trim();
-    if (!sid) return;
+    const raw = joinInput.trim();
+    if (!raw) return;
+    const code = extractSessionCode(raw);
+    if (!code) {
+      toast.error("Invalid session code or link.");
+      return;
+    }
     setJoinOpen(false);
-    setSessionId("");
-    router.push(`/sessions/${sid}`);
+    setJoinInput("");
+    router.push(`/sessions/${code}`);
   }
+
+  const isPending = creatingUser || createSession.isPending;
 
   return (
     <>
@@ -60,13 +97,26 @@ export function HeroSection() {
         </p>
 
         <div className="mt-10 flex w-full max-w-[400px] flex-col items-center gap-4">
+          {!userId && (
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="What should we call you?"
+              disabled={isPending}
+              className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-center text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
+              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            />
+          )}
           <div className="flex gap-3">
             <Button
               size="lg"
-              onClick={() => requireAuth(() => setCreateOpen(true))}
+              onClick={handleCreate}
+              disabled={isPending}
               className="h-12 px-7 text-[15px]"
             >
-              Create Session
+              {isPending && <Spinner />}
+              {isPending ? "Creating..." : "Create Session"}
             </Button>
             <Button
               variant="outline"
@@ -80,53 +130,29 @@ export function HeroSection() {
         </div>
       </section>
 
-      {/* Create session dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl">New session</DialogTitle>
-            <DialogDescription>
-              Give your coding session a name.
-            </DialogDescription>
-          </DialogHeader>
-          <input
-            type="text"
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            placeholder="e.g. React Dashboard"
-            autoFocus
-            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
-          <Button
-            onClick={handleCreate}
-            disabled={createSession.isPending}
-            className="h-12 w-full"
-          >
-            {createSession.isPending ? "Creating..." : "Create Session"}
-          </Button>
-        </DialogContent>
-      </Dialog>
-
       {/* Join session dialog */}
       <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl">Join a session</DialogTitle>
             <DialogDescription>
-              Enter the session ID shared with you to join.
+              Enter the session code or link shared with you.
             </DialogDescription>
           </DialogHeader>
           <input
             type="text"
-            value={sessionId}
-            onChange={(e) => setSessionId(e.target.value)}
-            placeholder="Paste session ID"
+            value={joinInput}
+            onChange={(e) => setJoinInput(e.target.value)}
+            placeholder="e.g. abc-def-ghj or paste link"
             autoFocus
             className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
             onKeyDown={(e) => e.key === "Enter" && handleJoin()}
           />
-          <Button onClick={handleJoin} className="h-12 w-full">
+          <Button
+            onClick={handleJoin}
+            disabled={!joinInput.trim()}
+            className="h-12 w-full"
+          >
             Join Session
           </Button>
         </DialogContent>

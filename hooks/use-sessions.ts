@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useUserStore } from "@/stores/user-store";
@@ -7,6 +8,29 @@ import type {
   GetSessionsQuery,
   SessionVisibility,
 } from "@/lib/api-types";
+
+export function useSyncCurrentUser() {
+  const userId = useUserStore((s) => s.userId);
+  const color = useUserStore((s) => s.color);
+  const setUser = useUserStore((s) => s.setUser);
+  const hasHydrated = useUserStore((s) => s._hasHydrated);
+
+  const shouldFetch = hasHydrated && !!userId && !color;
+
+  const { data } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => api.users.me(),
+    enabled: shouldFetch,
+    staleTime: Infinity,
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (data) {
+      setUser(data.id, data.display_name, data.color);
+    }
+  }, [data, setUser]);
+}
 
 export function useSessions(query?: GetSessionsQuery) {
   const userId = useUserStore((s) => s.userId);

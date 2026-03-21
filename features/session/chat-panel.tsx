@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { SentIcon } from "@hugeicons/core-free-icons";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ChatMessage, Participant } from "@/lib/api-types";
-import { getColorForUser } from "@/lib/colors";
+import { getColorByName } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 
 function getInitials(name: string) {
@@ -50,7 +50,7 @@ function MessageBubble({
   message: ChatMessage;
   participants: Participant[];
 }) {
-  const color = getColorForUser(message.display_name);
+  const color = getColorByName(message.color);
   const parts = highlightMentions(message.content, participants);
 
   return (
@@ -181,23 +181,20 @@ export function ChatPanel({
       <div className="relative shrink-0 border-t border-white/5 p-2">
         {mentionOpen && filteredParticipants.length > 0 && (
           <div className="absolute bottom-full left-2 right-2 mb-1 rounded-lg border border-white/10 bg-[#111827] p-1 shadow-lg">
-            {filteredParticipants.map((p) => {
-              const color = getColorForUser(p.display_name);
-              return (
-                <button
-                  key={p.user_id}
-                  onClick={() => insertMention(p.display_name)}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
-                >
-                  <Avatar size="sm">
-                    <AvatarFallback color={color}>
-                      {getInitials(p.display_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  {p.display_name}
-                </button>
-              );
-            })}
+            {filteredParticipants.map((p) => (
+              <button
+                key={p.user_id}
+                onClick={() => insertMention(p.display_name)}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
+              >
+                <Avatar size="sm">
+                  <AvatarFallback color={getColorByName(p.color)}>
+                    {getInitials(p.display_name)}
+                  </AvatarFallback>
+                </Avatar>
+                {p.display_name}
+              </button>
+            ))}
           </div>
         )}
         <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5">

@@ -11,6 +11,7 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -28,10 +29,14 @@ import {
 } from "@/components/ui/command";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { useSessions, useCreateSession, useJoinSession } from "@/hooks/use-sessions";
+import {
+  useSessions,
+  useCreateSession,
+  useJoinSession,
+} from "@/hooks/use-sessions";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useUserStore } from "@/stores/user-store";
-import { getColorForUser } from "@/lib/colors";
+import { getColorByName } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 
 function getInitials(name: string) {
@@ -49,6 +54,7 @@ export function Sidebar() {
   const { data: sessionsData } = useSessions();
   const userId = useUserStore((s) => s.userId);
   const displayName = useUserStore((s) => s.displayName);
+  const userColor = useUserStore((s) => s.color);
   const requireAuth = useRequireAuth();
   const createSession = useCreateSession();
   const joinSession = useJoinSession();
@@ -64,12 +70,12 @@ export function Sidebar() {
   function handleCreate() {
     const name = sessionName.trim();
     if (!name) return;
-    setCreateOpen(false);
-    setSessionName("");
     createSession.mutate(
       { name, language: "typescript" },
       {
         onSuccess: (session) => {
+          setCreateOpen(false);
+          setSessionName("");
           router.push(`/sessions/${session.id}`);
         },
       },
@@ -79,13 +85,15 @@ export function Sidebar() {
   function handleJoin() {
     const sid = joinId.trim();
     if (!sid) return;
-    setJoinOpen(false);
-    setJoinId("");
     joinSession.mutate(sid, {
       onSuccess: () => {
+        setJoinOpen(false);
+        setJoinId("");
         router.push(`/sessions/${sid}`);
       },
       onError: () => {
+        setJoinOpen(false);
+        setJoinId("");
         router.push(`/sessions/${sid}`);
       },
     });
@@ -104,7 +112,7 @@ export function Sidebar() {
         )}
       >
         {showLabels && (
-          <Link href="/my-sessions" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Image
               src="/logo-icon.svg"
               alt="CodeSesh"
@@ -213,7 +221,7 @@ export function Sidebar() {
       >
         <Avatar size="sm">
           <AvatarFallback
-            color={displayName ? getColorForUser(displayName) : undefined}
+            color={userColor ? getColorByName(userColor) : undefined}
           >
             {displayName ? getInitials(displayName) : "?"}
           </AvatarFallback>
@@ -224,7 +232,8 @@ export function Sidebar() {
               {displayName}
             </p>
             <p className="text-xs text-[#9CA3AF]">
-              {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
+              {sessions.length}{" "}
+              {sessions.length === 1 ? "session" : "sessions"}
             </p>
           </div>
         )}
@@ -263,7 +272,12 @@ export function Sidebar() {
       </aside>
 
       {/* Create session dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(o) => {
+          if (!createSession.isPending) setCreateOpen(o);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl">New session</DialogTitle>
@@ -277,21 +291,28 @@ export function Sidebar() {
             onChange={(e) => setSessionName(e.target.value)}
             placeholder="e.g. React Dashboard"
             autoFocus
-            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            disabled={createSession.isPending}
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
           <Button
             onClick={handleCreate}
-            disabled={createSession.isPending}
+            disabled={createSession.isPending || !sessionName.trim()}
             className="h-12 w-full"
           >
+            {createSession.isPending && <Spinner />}
             {createSession.isPending ? "Creating..." : "Create Session"}
           </Button>
         </DialogContent>
       </Dialog>
 
       {/* Join session dialog */}
-      <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
+      <Dialog
+        open={joinOpen}
+        onOpenChange={(o) => {
+          if (!joinSession.isPending) setJoinOpen(o);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl">Join a session</DialogTitle>
@@ -305,14 +326,16 @@ export function Sidebar() {
             onChange={(e) => setJoinId(e.target.value)}
             placeholder="Paste session ID"
             autoFocus
-            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            disabled={joinSession.isPending}
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
             onKeyDown={(e) => e.key === "Enter" && handleJoin()}
           />
           <Button
             onClick={handleJoin}
-            disabled={joinSession.isPending}
+            disabled={joinSession.isPending || !joinId.trim()}
             className="h-12 w-full"
           >
+            {joinSession.isPending && <Spinner />}
             {joinSession.isPending ? "Joining..." : "Join Session"}
           </Button>
         </DialogContent>

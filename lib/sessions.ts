@@ -7,6 +7,7 @@ export type {
   ChatMessage,
   PaginatedResponse,
   MessageHistory,
+  UserResponse,
   CreateUserResponse,
   GetSessionsQuery,
   GetMessagesQuery,

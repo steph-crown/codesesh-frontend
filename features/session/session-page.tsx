@@ -190,6 +190,7 @@ export function SessionPage({
 }) {
   const userId = useUserStore((s) => s.userId);
   const displayName = useUserStore((s) => s.displayName) ?? "Guest";
+  const userColor = useUserStore((s) => s.color) ?? "red";
   const { data: participants } = useParticipants(sessionId);
   const { data: messagesData } = useMessages(sessionId);
 
@@ -386,6 +387,7 @@ export function SessionPage({
         session_id: sessionId,
         user_id: userId ?? "",
         display_name: displayName,
+        color: userColor,
         content,
         created_at: new Date().toISOString(),
       },

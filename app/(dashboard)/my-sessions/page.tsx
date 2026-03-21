@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +28,22 @@ import {
   type FilterValue,
 } from "@/features/dashboard/session-filters";
 import { SessionGrid } from "@/features/dashboard/session-grid";
+
+function SessionCardSkeleton() {
+  return (
+    <div className="rounded-[1rem] border border-[#ededea] bg-white p-8">
+      <Skeleton className="h-5 w-2/3 bg-[#F0EDE8]" />
+      <div className="mt-3 flex items-center gap-2">
+        <Skeleton className="h-3.5 w-16 bg-[#F0EDE8]" />
+        <Skeleton className="h-3.5 w-24 bg-[#F0EDE8]" />
+      </div>
+      <div className="mt-6 flex items-center justify-between">
+        <Skeleton className="h-3.5 w-16 rounded-full bg-[#F0EDE8]" />
+        <Skeleton className="h-3.5 w-24 bg-[#F0EDE8]" />
+      </div>
+    </div>
+  );
+}
 
 export default function MySessionsPage() {
   const router = useRouter();
@@ -59,12 +77,12 @@ export default function MySessionsPage() {
   function handleCreate() {
     const name = sessionName.trim();
     if (!name) return;
-    setCreateOpen(false);
-    setSessionName("");
     createSession.mutate(
       { name, language: "typescript" },
       {
         onSuccess: (session) => {
+          setCreateOpen(false);
+          setSessionName("");
           router.push(`/sessions/${session.id}`);
         },
       },
@@ -73,9 +91,15 @@ export default function MySessionsPage() {
 
   function handleRename() {
     if (!renameId || !renameValue.trim()) return;
-    updateName.mutate({ sessionId: renameId, name: renameValue.trim() });
-    setRenameId(null);
-    setRenameValue("");
+    updateName.mutate(
+      { sessionId: renameId, name: renameValue.trim() },
+      {
+        onSuccess: () => {
+          setRenameId(null);
+          setRenameValue("");
+        },
+      },
+    );
   }
 
   function openRename(id: string) {
@@ -143,8 +167,10 @@ export default function MySessionsPage() {
       {/* Grid */}
       <div className="mt-6">
         {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <span className="inline-block size-6 animate-spin rounded-full border-2 border-[#9CA3AF]/30 border-t-[#9CA3AF]" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SessionCardSkeleton key={i} />
+            ))}
           </div>
         ) : (
           <SessionGrid
@@ -156,7 +182,12 @@ export default function MySessionsPage() {
       </div>
 
       {/* Create session dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(o) => {
+          if (!createSession.isPending) setCreateOpen(o);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl">New session</DialogTitle>
@@ -170,14 +201,16 @@ export default function MySessionsPage() {
             onChange={(e) => setSessionName(e.target.value)}
             placeholder="e.g. React Dashboard"
             autoFocus
-            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            disabled={createSession.isPending}
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
           <Button
             onClick={handleCreate}
-            disabled={createSession.isPending}
+            disabled={createSession.isPending || !sessionName.trim()}
             className="h-12 w-full"
           >
+            {createSession.isPending && <Spinner />}
             {createSession.isPending ? "Creating..." : "Create Session"}
           </Button>
         </DialogContent>
@@ -187,7 +220,7 @@ export default function MySessionsPage() {
       <Dialog
         open={renameId !== null}
         onOpenChange={(open) => {
-          if (!open) {
+          if (!open && !updateName.isPending) {
             setRenameId(null);
             setRenameValue("");
           }
@@ -206,14 +239,16 @@ export default function MySessionsPage() {
             onChange={(e) => setRenameValue(e.target.value)}
             placeholder="Session name"
             autoFocus
-            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            disabled={updateName.isPending}
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
             onKeyDown={(e) => e.key === "Enter" && handleRename()}
           />
           <Button
             onClick={handleRename}
-            disabled={updateName.isPending}
+            disabled={updateName.isPending || !renameValue.trim()}
             className="h-12 w-full"
           >
+            {updateName.isPending && <Spinner />}
             {updateName.isPending ? "Saving..." : "Save"}
           </Button>
         </DialogContent>

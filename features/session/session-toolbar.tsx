@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { SessionDetail, Participant } from "@/lib/api-types";
-import { getColorForUser } from "@/lib/colors";
+import { getColorByName } from "@/lib/colors";
 import {
   useUpdateSessionName,
   useUpdateSessionVisibility,
@@ -64,6 +64,10 @@ export function SessionToolbar({
   const [title, setTitle] = useState(session.name);
   const [editingTitle, setEditingTitle] = useState(false);
 
+  useEffect(() => {
+    if (!editingTitle) setTitle(session.name);
+  }, [session.name, editingTitle]);
+
   function handleTitleCommit() {
     setEditingTitle(false);
     const trimmed = title.trim();
@@ -76,6 +80,7 @@ export function SessionToolbar({
 
   const contributors = participants.map((p) => ({
     username: p.display_name,
+    color: p.color,
   }));
 
   return (
@@ -142,16 +147,13 @@ export function SessionToolbar({
           <div className="h-4 w-px bg-white/10" />
 
           <AvatarGroup>
-            {participants.slice(0, 4).map((p) => {
-              const color = getColorForUser(p.display_name);
-              return (
-                <Avatar key={p.user_id} size="sm">
-                  <AvatarFallback color={color}>
-                    {getInitials(p.display_name)}
-                  </AvatarFallback>
-                </Avatar>
-              );
-            })}
+            {participants.slice(0, 4).map((p) => (
+              <Avatar key={p.user_id} size="sm">
+                <AvatarFallback color={getColorByName(p.color)}>
+                  {getInitials(p.display_name)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
           </AvatarGroup>
 
           <div className="h-4 w-px bg-white/10" />
@@ -186,16 +188,13 @@ export function SessionToolbar({
           >
             <div className="flex items-center gap-2 px-2.5 py-2">
               <AvatarGroup>
-                {participants.slice(0, 4).map((p) => {
-                  const color = getColorForUser(p.display_name);
-                  return (
-                    <Avatar key={p.user_id} size="sm">
-                      <AvatarFallback color={color}>
-                        {getInitials(p.display_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                  );
-                })}
+                {participants.slice(0, 4).map((p) => (
+                  <Avatar key={p.user_id} size="sm">
+                    <AvatarFallback color={getColorByName(p.color)}>
+                      {getInitials(p.display_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
               </AvatarGroup>
               <span className="text-xs text-[#9CA3AF]">
                 {participants.length} collaborator

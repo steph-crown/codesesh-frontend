@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getColorForUser } from "@/lib/colors";
+import { getColorByName } from "@/lib/colors";
 
 function getInitials(name: string) {
   return name
@@ -23,7 +23,7 @@ export function PingMenu({
   contributors,
   onPing,
 }: {
-  contributors: { username: string }[];
+  contributors: { username: string; color: string }[];
   onPing: (username: string | "everyone") => void;
 }) {
   return (
@@ -48,23 +48,20 @@ export function PingMenu({
           Ping everyone
         </button>
         <div className="my-1 h-px bg-white/10" />
-        {contributors.map((c) => {
-          const color = getColorForUser(c.username);
-          return (
-            <button
-              key={c.username}
-              onClick={() => onPing(c.username)}
-              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
-            >
-              <Avatar size="sm">
-                <AvatarFallback color={color}>
-                  {getInitials(c.username)}
-                </AvatarFallback>
-              </Avatar>
-              {c.username}
-            </button>
-          );
-        })}
+        {contributors.map((c) => (
+          <button
+            key={c.username}
+            onClick={() => onPing(c.username)}
+            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
+          >
+            <Avatar size="sm">
+              <AvatarFallback color={getColorByName(c.color)}>
+                {getInitials(c.username)}
+              </AvatarFallback>
+            </Avatar>
+            {c.username}
+          </button>
+        ))}
       </PopoverContent>
     </Popover>
   );

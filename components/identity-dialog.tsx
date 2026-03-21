@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { useUserStore } from "@/stores/user-store";
 import { api } from "@/lib/api";
+import { PALETTE } from "@/lib/colors";
+
+function randomColorName() {
+  return PALETTE[Math.floor(Math.random() * PALETTE.length)].name;
+}
 
 export function IdentityDialog() {
   const pendingAction = useUserStore((s) => s.pendingAction);
@@ -32,8 +38,8 @@ export function IdentityDialog() {
     setError("");
 
     try {
-      const user = await api.users.create(trimmed);
-      setUser(user.id, user.display_name);
+      const user = await api.users.create(trimmed, randomColorName());
+      setUser(user.id, user.display_name, user.color);
       setName("");
       resolvePending();
     } catch (err) {
@@ -47,7 +53,7 @@ export function IdentityDialog() {
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        if (!o) {
+        if (!o && !loading) {
           cancelPending();
           setName("");
           setError("");
@@ -80,6 +86,7 @@ export function IdentityDialog() {
           disabled={loading || !name.trim()}
           className="h-12 w-full"
         >
+          {loading && <Spinner />}
           {loading ? "Creating..." : "Continue"}
         </Button>
       </DialogContent>

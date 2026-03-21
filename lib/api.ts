@@ -1,6 +1,6 @@
 import { apiFetch } from "./api-client";
 import type {
-  CreateUserResponse,
+  UserResponse,
   SessionDetail,
   SessionSummary,
   PaginatedResponse,
@@ -22,11 +22,13 @@ function toQueryString(params: Record<string, string | number | boolean | undefi
 
 export const api = {
   users: {
-    create: (displayName: string) =>
-      apiFetch<CreateUserResponse>("/users", {
+    create: (displayName: string, color: string) =>
+      apiFetch<UserResponse>("/users", {
         method: "POST",
-        body: JSON.stringify({ display_name: displayName }),
+        body: JSON.stringify({ display_name: displayName, color }),
       }),
+
+    me: () => apiFetch<UserResponse>("/users/me"),
   },
 
   sessions: {
