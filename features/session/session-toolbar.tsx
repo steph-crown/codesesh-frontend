@@ -16,8 +16,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Session } from "@/lib/sessions";
+import type { SessionDetail, Participant } from "@/lib/api-types";
 import { getColorForUser } from "@/lib/colors";
+import {
+  useUpdateSessionName,
+  useUpdateSessionVisibility,
+} from "@/hooks/use-sessions";
 import { LanguageSelector } from "./language-selector";
 import {
   ConnectionIndicator,
@@ -37,13 +41,15 @@ function getInitials(name: string) {
 
 export function SessionToolbar({
   session,
+  participants,
   language,
   onLanguageChange,
   onRun,
   running = false,
   connectionStatus = "connected",
 }: {
-  session: Session;
+  session: SessionDetail;
+  participants: Participant[];
   language: string;
   onLanguageChange: (lang: string) => void;
   onRun: () => void;
@@ -51,10 +57,26 @@ export function SessionToolbar({
   connectionStatus?: ConnectionStatus;
 }) {
   const router = useRouter();
+  const updateName = useUpdateSessionName();
+  const updateVisibility = useUpdateSessionVisibility();
+
   const [shareOpen, setShareOpen] = useState(false);
-  const [privacy, setPrivacy] = useState(session.privacy);
-  const [title, setTitle] = useState(session.title);
+  const [title, setTitle] = useState(session.name);
   const [editingTitle, setEditingTitle] = useState(false);
+
+  function handleTitleCommit() {
+    setEditingTitle(false);
+    const trimmed = title.trim();
+    if (trimmed && trimmed !== session.name) {
+      updateName.mutate({ sessionId: session.id, name: trimmed });
+    } else {
+      setTitle(session.name);
+    }
+  }
+
+  const contributors = participants.map((p) => ({
+    username: p.display_name,
+  }));
 
   return (
     <>
@@ -66,11 +88,11 @@ export function SessionToolbar({
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onBlur={() => setEditingTitle(false)}
+              onBlur={handleTitleCommit}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setEditingTitle(false);
+                if (e.key === "Enter") handleTitleCommit();
                 if (e.key === "Escape") {
-                  setTitle(session.title);
+                  setTitle(session.name);
                   setEditingTitle(false);
                 }
               }}
@@ -78,7 +100,7 @@ export function SessionToolbar({
             />
           ) : (
             <button
-              onClick={() => setEditingTitle(true)}
+              onClick={() => session.is_owner && setEditingTitle(true)}
               className="truncate rounded-md px-2 py-1 text-sm font-medium text-[#F9FAFB] transition-colors hover:bg-white/5"
             >
               {title}
@@ -107,7 +129,7 @@ export function SessionToolbar({
           </button>
         </div>
 
-        {/* Right section: desktop — full toolbar */}
+        {/* Right section: desktop */}
         <div className="hidden items-center gap-2 md:flex">
           <button
             onClick={() => setShareOpen(true)}
@@ -120,12 +142,12 @@ export function SessionToolbar({
           <div className="h-4 w-px bg-white/10" />
 
           <AvatarGroup>
-            {session.contributors.slice(0, 4).map((c) => {
-              const color = getColorForUser(c.username);
+            {participants.slice(0, 4).map((p) => {
+              const color = getColorForUser(p.display_name);
               return (
-                <Avatar key={c.username} size="sm">
+                <Avatar key={p.user_id} size="sm">
                   <AvatarFallback color={color}>
-                    {getInitials(c.username)}
+                    {getInitials(p.display_name)}
                   </AvatarFallback>
                 </Avatar>
               );
@@ -138,7 +160,7 @@ export function SessionToolbar({
 
           <div className="h-4 w-px bg-white/10" />
 
-          <PingMenu contributors={session.contributors} onPing={() => {}} />
+          <PingMenu contributors={contributors} onPing={() => {}} />
 
           <div className="h-4 w-px bg-white/10" />
 
@@ -151,7 +173,7 @@ export function SessionToolbar({
           </button>
         </div>
 
-        {/* Right section: mobile — overflow menu */}
+        {/* Right section: mobile */}
         <Popover>
           <PopoverTrigger className="flex items-center rounded-md p-1.5 text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB] md:hidden">
             <HugeiconsIcon icon={MoreVerticalIcon} size={18} strokeWidth={2} />
@@ -162,36 +184,33 @@ export function SessionToolbar({
             sideOffset={8}
             className="w-56 gap-0 rounded-lg! border-white/10! bg-[#111827]! p-1.5"
           >
-            {/* Collaborators */}
             <div className="flex items-center gap-2 px-2.5 py-2">
               <AvatarGroup>
-                {session.contributors.slice(0, 4).map((c) => {
-                  const color = getColorForUser(c.username);
+                {participants.slice(0, 4).map((p) => {
+                  const color = getColorForUser(p.display_name);
                   return (
-                    <Avatar key={c.username} size="sm">
+                    <Avatar key={p.user_id} size="sm">
                       <AvatarFallback color={color}>
-                        {getInitials(c.username)}
+                        {getInitials(p.display_name)}
                       </AvatarFallback>
                     </Avatar>
                   );
                 })}
               </AvatarGroup>
               <span className="text-xs text-[#9CA3AF]">
-                {session.contributors.length} collaborator
-                {session.contributors.length !== 1 && "s"}
+                {participants.length} collaborator
+                {participants.length !== 1 && "s"}
               </span>
             </div>
 
             <div className="my-1 h-px bg-white/10" />
 
-            {/* Connection status */}
             <div className="flex items-center gap-2.5 px-2.5 py-2">
               <ConnectionIndicator status={connectionStatus} />
             </div>
 
             <div className="my-1 h-px bg-white/10" />
 
-            {/* Share */}
             <button
               onClick={() => setShareOpen(true)}
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#F9FAFB] transition-colors hover:bg-white/5"
@@ -200,7 +219,6 @@ export function SessionToolbar({
               Share
             </button>
 
-            {/* Ping */}
             <button
               onClick={() => {}}
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#F9FAFB] transition-colors hover:bg-white/5"
@@ -215,7 +233,6 @@ export function SessionToolbar({
 
             <div className="my-1 h-px bg-white/10" />
 
-            {/* Leave */}
             <button
               onClick={() => router.push("/my-sessions")}
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#DC2626] transition-colors hover:bg-white/5"
@@ -231,8 +248,14 @@ export function SessionToolbar({
         open={shareOpen}
         onOpenChange={setShareOpen}
         sessionId={session.id}
-        privacy={privacy}
-        onPrivacyChange={setPrivacy}
+        visibility={session.visibility}
+        isOwner={session.is_owner}
+        onVisibilityChange={(vis) => {
+          updateVisibility.mutate({
+            sessionId: session.id,
+            visibility: vis,
+          });
+        }}
       />
     </>
   );

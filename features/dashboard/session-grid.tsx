@@ -1,16 +1,16 @@
 "use client";
 
-import type { Session } from "@/lib/sessions";
+import type { SessionSummary } from "@/lib/api-types";
 import { SessionCard } from "./session-card";
 
 export function SessionGrid({
   sessions,
   onRename,
-  onDelete,
+  onEnd,
 }: Readonly<{
-  sessions: Session[];
+  sessions: SessionSummary[];
   onRename: (id: string) => void;
-  onDelete: (id: string) => void;
+  onEnd: (id: string) => void;
 }>) {
   if (sessions.length === 0) {
     return (
@@ -24,13 +24,13 @@ export function SessionGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {sessions.map((s) => (
         <SessionCard
           key={s.id}
           session={s}
           onRename={onRename}
-          onDelete={onDelete}
+          onEnd={onEnd}
         />
       ))}
     </div>

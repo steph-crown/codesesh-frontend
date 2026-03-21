@@ -28,7 +28,10 @@ import {
 } from "@/components/ui/command";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { useSessions, useUser } from "@/hooks/use-sessions";
+import { useSessions, useCreateSession, useJoinSession } from "@/hooks/use-sessions";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useUserStore } from "@/stores/user-store";
+import { getColorForUser } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 
 function getInitials(name: string) {
@@ -43,20 +46,34 @@ function getInitials(name: string) {
 export function Sidebar() {
   const router = useRouter();
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar();
-  const { sessions } = useSessions();
-  const user = useUser();
+  const { data: sessionsData } = useSessions();
+  const userId = useUserStore((s) => s.userId);
+  const displayName = useUserStore((s) => s.displayName);
+  const requireAuth = useRequireAuth();
+  const createSession = useCreateSession();
+  const joinSession = useJoinSession();
+
+  const sessions = sessionsData?.data ?? [];
 
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinId, setJoinId] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [newUsername, setNewUsername] = useState("");
+  const [sessionName, setSessionName] = useState("");
 
   function handleCreate() {
-    const name = newUsername.trim();
+    const name = sessionName.trim();
     if (!name) return;
     setCreateOpen(false);
-    setNewUsername("");
+    setSessionName("");
+    createSession.mutate(
+      { name, language: "typescript" },
+      {
+        onSuccess: (session) => {
+          router.push(`/sessions/${session.id}`);
+        },
+      },
+    );
   }
 
   function handleJoin() {
@@ -64,11 +81,17 @@ export function Sidebar() {
     if (!sid) return;
     setJoinOpen(false);
     setJoinId("");
-    router.push(`/sessions/${sid}`);
+    joinSession.mutate(sid, {
+      onSuccess: () => {
+        router.push(`/sessions/${sid}`);
+      },
+      onError: () => {
+        router.push(`/sessions/${sid}`);
+      },
+    });
   }
 
   const recent = sessions.slice(0, 10);
-
   const showLabels = mobileOpen || !collapsed;
 
   const sidebarContent = (
@@ -76,7 +99,7 @@ export function Sidebar() {
       {/* Logo + collapse */}
       <div
         className={cn(
-          "flex items-center h-14 border-b border-[#E5E0DA] px-3",
+          "flex h-14 items-center border-b border-[#E5E0DA] px-3",
           showLabels ? "justify-between" : "justify-center",
         )}
       >
@@ -98,7 +121,7 @@ export function Sidebar() {
               toggle();
             }
           }}
-          className="p-1.5 rounded-lg hover:bg-[#FAF5F0] transition-colors"
+          className="rounded-lg p-1.5 transition-colors hover:bg-[#FAF5F0]"
           aria-label={showLabels ? "Collapse sidebar" : "Expand sidebar"}
         >
           <Image
@@ -122,20 +145,20 @@ export function Sidebar() {
         )}
       >
         <button
-          onClick={() => setCreateOpen(true)}
+          onClick={() => requireAuth(() => setCreateOpen(true))}
           className={cn(
-            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors w-full",
-            !showLabels && "justify-center w-10 px-0",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]",
+            !showLabels && "w-10 justify-center px-0",
           )}
         >
           <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2} />
           {showLabels && "New session"}
         </button>
         <button
-          onClick={() => setJoinOpen(true)}
+          onClick={() => requireAuth(() => setJoinOpen(true))}
           className={cn(
-            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors w-full",
-            !showLabels && "justify-center w-10 px-0",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]",
+            !showLabels && "w-10 justify-center px-0",
           )}
         >
           <HugeiconsIcon icon={Login01Icon} size={18} strokeWidth={2} />
@@ -144,8 +167,8 @@ export function Sidebar() {
         <button
           onClick={() => setSearchOpen(true)}
           className={cn(
-            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors w-full",
-            !showLabels && "justify-center w-10 px-0",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]",
+            !showLabels && "w-10 justify-center px-0",
           )}
         >
           <HugeiconsIcon icon={Search01Icon} size={18} strokeWidth={2} />
@@ -156,7 +179,7 @@ export function Sidebar() {
       {/* Recent sessions */}
       {showLabels && (
         <div className="flex-1 overflow-y-auto px-2 pt-2">
-          <p className="px-2.5 pb-2 text-[10px] font-medium text-[#9CA3AF] uppercase tracking-wider">
+          <p className="px-2.5 pb-2 text-[10px] font-medium uppercase tracking-wider text-[#9CA3AF]">
             Recent sessions
           </p>
           <div className="flex flex-col gap-0.5">
@@ -165,9 +188,9 @@ export function Sidebar() {
                 key={s.id}
                 href={`/sessions/${s.id}`}
                 onClick={() => setMobileOpen(false)}
-                className="block truncate rounded-lg px-2.5 py-1.5 text-sm text-[#4B5563] hover:bg-[#FAF5F0] hover:text-[#0A0A0A] transition-colors"
+                className="block truncate rounded-lg px-2.5 py-1.5 text-sm text-[#4B5563] transition-colors hover:bg-[#FAF5F0] hover:text-[#0A0A0A]"
               >
-                {s.title}
+                {s.name}
               </Link>
             ))}
             {recent.length === 0 && (
@@ -189,18 +212,19 @@ export function Sidebar() {
         )}
       >
         <Avatar size="sm">
-          <AvatarFallback>
-            {user ? getInitials(user.username) : "?"}
+          <AvatarFallback
+            color={displayName ? getColorForUser(displayName) : undefined}
+          >
+            {displayName ? getInitials(displayName) : "?"}
           </AvatarFallback>
         </Avatar>
-        {showLabels && user && (
+        {showLabels && userId && (
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-[#0A0A0A]">
-              {user.username}
+              {displayName}
             </p>
             <p className="text-xs text-[#9CA3AF]">
-              {sessions.length}{" "}
-              {sessions.length === 1 ? "session" : "sessions"}
+              {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
             </p>
           </div>
         )}
@@ -221,7 +245,7 @@ export function Sidebar() {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col w-full bg-white transition-transform duration-200 ease-in-out md:hidden",
+          "fixed inset-y-0 left-0 z-50 flex w-full flex-col bg-white transition-transform duration-200 ease-in-out md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -231,7 +255,7 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden md:flex flex-col h-svh bg-white border-r border-[#E5E0DA] transition-all duration-200 shrink-0",
+          "hidden h-svh shrink-0 flex-col border-r border-[#E5E0DA] bg-white transition-all duration-200 md:flex",
           collapsed ? "w-[60px]" : "w-[260px]",
         )}
       >
@@ -244,20 +268,24 @@ export function Sidebar() {
           <DialogHeader>
             <DialogTitle className="text-xl">New session</DialogTitle>
             <DialogDescription>
-              Enter your display name to create a new coding session.
+              Give your coding session a name.
             </DialogDescription>
           </DialogHeader>
           <input
             type="text"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-            placeholder="What should we call you?"
+            value={sessionName}
+            onChange={(e) => setSessionName(e.target.value)}
+            placeholder="e.g. React Dashboard"
             autoFocus
-            className="w-full h-12 rounded-full bg-white border-[1.5px] border-primary px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
-          <Button onClick={handleCreate} className="w-full h-12">
-            Create Session
+          <Button
+            onClick={handleCreate}
+            disabled={createSession.isPending}
+            className="h-12 w-full"
+          >
+            {createSession.isPending ? "Creating..." : "Create Session"}
           </Button>
         </DialogContent>
       </Dialog>
@@ -275,13 +303,17 @@ export function Sidebar() {
             type="text"
             value={joinId}
             onChange={(e) => setJoinId(e.target.value)}
-            placeholder="e.g. xk7p2"
+            placeholder="Paste session ID"
             autoFocus
-            className="w-full h-12 rounded-full bg-white border-[1.5px] border-primary px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
             onKeyDown={(e) => e.key === "Enter" && handleJoin()}
           />
-          <Button onClick={handleJoin} className="w-full h-12">
-            Join Session
+          <Button
+            onClick={handleJoin}
+            disabled={joinSession.isPending}
+            className="h-12 w-full"
+          >
+            {joinSession.isPending ? "Joining..." : "Join Session"}
           </Button>
         </DialogContent>
       </Dialog>
@@ -295,13 +327,13 @@ export function Sidebar() {
             {sessions.map((s) => (
               <CommandItem
                 key={s.id}
-                value={s.title}
+                value={s.name}
                 onSelect={() => {
                   setSearchOpen(false);
                   router.push(`/sessions/${s.id}`);
                 }}
               >
-                {s.title}
+                {s.name}
               </CommandItem>
             ))}
           </CommandGroup>

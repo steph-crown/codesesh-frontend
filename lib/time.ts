@@ -7,8 +7,15 @@ const UNITS: [number, string, string][] = [
   [60_000, "minute", "minutes"],
 ];
 
-export function timeAgo(date: number | Date): string {
-  const ms = Date.now() - (typeof date === "number" ? date : date.getTime());
+export function timeAgo(date: number | string | Date): string {
+  const timestamp =
+    typeof date === "string"
+      ? new Date(date).getTime()
+      : typeof date === "number"
+        ? date
+        : date.getTime();
+
+  const ms = Date.now() - timestamp;
 
   for (const [threshold, singular, plural] of UNITS) {
     if (ms >= threshold) {

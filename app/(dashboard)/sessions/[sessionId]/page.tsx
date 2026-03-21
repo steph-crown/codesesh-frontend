@@ -1,8 +1,9 @@
 "use client";
 
-import { use } from "react";
-import { notFound } from "next/navigation";
-import { useSessions, useUser, useChatMessages } from "@/hooks/use-sessions";
+import { use, useEffect } from "react";
+import { useSession, useJoinSession } from "@/hooks/use-sessions";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useUserStore } from "@/stores/user-store";
 import { SessionPage } from "@/features/session/session-page";
 
 export default function SessionRoute({
@@ -11,21 +12,56 @@ export default function SessionRoute({
   params: Promise<{ sessionId: string }>;
 }) {
   const { sessionId } = use(params);
-  const { sessions } = useSessions();
-  const user = useUser();
-  const messages = useChatMessages();
+  const userId = useUserStore((s) => s.userId);
+  const hasHydrated = useUserStore((s) => s._hasHydrated);
+  const requireAuth = useRequireAuth();
+  const joinSession = useJoinSession();
+  const { data: session, isLoading, error } = useSession(sessionId);
 
-  const session = sessions.find((s) => s.id === sessionId);
+  useEffect(() => {
+    if (!hasHydrated) return;
+    if (!userId) {
+      requireAuth(() => {});
+    }
+  }, [hasHydrated, userId, requireAuth]);
 
-  if (!session) {
-    notFound();
+  useEffect(() => {
+    if (userId && sessionId) {
+      joinSession.mutate(sessionId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, sessionId]);
+
+  if (!hasHydrated || isLoading) {
+    return (
+      <div className="dark flex size-full items-center justify-center bg-[#020617]">
+        <span className="inline-block size-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      </div>
+    );
   }
 
-  return (
-    <SessionPage
-      session={session}
-      messages={messages}
-      currentUser={user.username}
-    />
-  );
+  if (!userId) {
+    return (
+      <div className="dark flex size-full items-center justify-center bg-[#020617]">
+        <p className="text-sm text-[#9CA3AF]">
+          Enter your name to join this session.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dark flex size-full flex-col items-center justify-center gap-2 bg-[#020617]">
+        <p className="text-lg font-medium text-[#F9FAFB]">Session not found</p>
+        <p className="text-sm text-[#9CA3AF]">
+          This session may have been deleted or you don&apos;t have access.
+        </p>
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
+  return <SessionPage session={session} sessionId={sessionId} />;
 }

@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect, useEffect } from "react";
-import type { Session, ChatMessage } from "@/lib/sessions";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useLayoutEffect,
+  useEffect,
+} from "react";
+import type { SessionDetail, ChatMessage } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CommandLineIcon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
+import { useParticipants, useMessages } from "@/hooks/use-sessions";
+import { useUserStore } from "@/stores/user-store";
 import { SessionToolbar } from "./session-toolbar";
 import { EditorPanel, type EditorPanelHandle } from "./editor-panel";
 import { TerminalPanel, type TerminalLine } from "./terminal-panel";
@@ -175,19 +183,26 @@ function DragHandle({
 
 export function SessionPage({
   session,
-  messages,
-  currentUser,
+  sessionId,
 }: {
-  session: Session;
-  messages: ChatMessage[];
-  currentUser: string;
+  session: SessionDetail;
+  sessionId: string;
 }) {
-  const [language, setLanguage] = useState("typescript");
+  const userId = useUserStore((s) => s.userId);
+  const displayName = useUserStore((s) => s.displayName) ?? "Guest";
+  const { data: participants } = useParticipants(sessionId);
+  const { data: messagesData } = useMessages(sessionId);
+
+  const apiMessages: ChatMessage[] = messagesData?.messages ?? [];
+
+  const [language, setLanguage] = useState(session.language || "typescript");
   const [mobileTab, setMobileTab] = useState<MobileTab>("editor");
-  const [chatMessages, setChatMessages] = useState(messages);
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [terminalLines, setTerminalLines] = useState<TerminalLine[]>([]);
   const [running, setRunning] = useState(false);
   const codeEditorRef = useRef<EditorPanelHandle>(null);
+
+  const allMessages = [...apiMessages, ...localMessages];
 
   const [terminalCollapsed, setTerminalCollapsed] = useState(() =>
     isClient() ? storageBool(V_COLLAPSED_KEY, false) : false,
@@ -305,9 +320,7 @@ export function SessionPage({
       LANGUAGES.find((l) => l.id === language)?.label ?? language;
 
     setRunning(true);
-    setTerminalLines([
-      { type: "system", text: `$ Running ${langLabel}...` },
-    ]);
+    setTerminalLines([{ type: "system", text: `$ Running ${langLabel}...` }]);
 
     if (termCollapsedRef.current) {
       expandTerminal();
@@ -365,15 +378,16 @@ export function SessionPage({
     }
   }
 
-  function handleSendMessage(content: string, mentions: string[]) {
-    setChatMessages((prev) => [
+  function handleSendMessage(content: string) {
+    setLocalMessages((prev) => [
       ...prev,
       {
-        id: `msg-${Date.now()}`,
-        sender: currentUser,
+        id: `local-${Date.now()}`,
+        session_id: sessionId,
+        user_id: userId ?? "",
+        display_name: displayName,
         content,
-        timestamp: Date.now(),
-        mentions: mentions.length > 0 ? mentions : undefined,
+        created_at: new Date().toISOString(),
       },
     ]);
   }
@@ -382,6 +396,7 @@ export function SessionPage({
     <div className="dark flex size-full flex-col bg-[#020617]">
       <SessionToolbar
         session={session}
+        participants={participants ?? []}
         language={language}
         onLanguageChange={setLanguage}
         onRun={runCode}
@@ -404,15 +419,15 @@ export function SessionPage({
         )}
         {mobileTab === "chat" && (
           <ChatPanel
-            messages={chatMessages}
-            contributors={session.contributors}
-            currentUser={currentUser}
+            messages={allMessages}
+            participants={participants ?? []}
+            currentUserId={userId ?? ""}
             onSend={handleSendMessage}
           />
         )}
       </div>
 
-      {/* Desktop panels — positions applied via refs in useLayoutEffect */}
+      {/* Desktop panels */}
       <div
         ref={containerRef}
         className="hidden flex-1 gap-1 overflow-hidden p-2 md:flex"
@@ -467,9 +482,9 @@ export function SessionPage({
             <CollapsedChatPanel />
           ) : (
             <ChatPanel
-              messages={chatMessages}
-              contributors={session.contributors}
-              currentUser={currentUser}
+              messages={allMessages}
+              participants={participants ?? []}
+              currentUserId={userId ?? ""}
               onSend={handleSendMessage}
             />
           )}
