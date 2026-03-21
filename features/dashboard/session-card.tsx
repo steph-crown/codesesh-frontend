@@ -17,7 +17,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+} from "@/components/ui/avatar";
 import type { SessionSummary } from "@/lib/api-types";
+import { useParticipants } from "@/hooks/use-sessions";
+import { getColorByName } from "@/lib/colors";
 import { timeAgo } from "@/lib/time";
 
 const VISIBILITY_CONFIG = {
@@ -25,6 +33,17 @@ const VISIBILITY_CONFIG = {
   view_only: { icon: ViewIcon, label: "View only" },
   edit: { icon: PencilEdit02Icon, label: "Can edit" },
 } as const;
+
+const MAX_AVATARS = 5;
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 export function SessionCard({
   session,
@@ -37,6 +56,11 @@ export function SessionCard({
 }>) {
   const [menuOpen, setMenuOpen] = useState(false);
   const visConfig = VISIBILITY_CONFIG[session.visibility];
+  const { data: participants } = useParticipants(session.short_id);
+  const overflow =
+    participants && participants.length > MAX_AVATARS
+      ? participants.length - MAX_AVATARS
+      : 0;
 
   return (
     <Link
@@ -50,11 +74,7 @@ export function SessionCard({
           </h3>
           <div className="mt-1.5 flex items-center gap-2">
             <span className="flex items-center gap-1 text-xs text-[#9CA3AF]">
-              <HugeiconsIcon
-                icon={visConfig.icon}
-                size={12}
-                strokeWidth={2}
-              />
+              <HugeiconsIcon icon={visConfig.icon} size={12} strokeWidth={2} />
               {visConfig.label}
             </span>
             <span className="text-[#D1D5DB]">&middot;</span>
@@ -69,6 +89,24 @@ export function SessionCard({
             )}
           </div>
         </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {participants && participants.length > 0 && (
+            <AvatarGroup>
+              {participants.slice(0, MAX_AVATARS).map((p) => (
+                <Avatar key={p.user_id} size="sm">
+                  <AvatarFallback color={getColorByName(p.color)}>
+                    {getInitials(p.display_name)}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+              {overflow > 0 && (
+                <AvatarGroupCount className="text-[10px]">
+                  +{overflow}
+                </AvatarGroupCount>
+              )}
+            </AvatarGroup>
+          )}
 
         {session.is_owner && session.status === "active" && (
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
@@ -136,16 +174,13 @@ export function SessionCard({
                 }}
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-50"
               >
-                <HugeiconsIcon
-                  icon={Delete01Icon}
-                  size={16}
-                  strokeWidth={2}
-                />
+                <HugeiconsIcon icon={Delete01Icon} size={16} strokeWidth={2} />
                 End session
               </button>
             </PopoverContent>
           </Popover>
         )}
+        </div>
       </div>
 
       <div className="mt-6 flex items-center justify-between">
