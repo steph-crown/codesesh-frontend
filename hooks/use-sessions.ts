@@ -92,7 +92,7 @@ export function useUpdateSessionName() {
     mutationFn: ({ sessionId, name }: { sessionId: string; name: string }) =>
       api.sessions.updateName(sessionId, name),
     onSuccess: (data) => {
-      queryClient.setQueryData(["session", data.id], data);
+      queryClient.setQueryData(["session", data.short_id], data);
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });
@@ -110,7 +110,7 @@ export function useUpdateSessionVisibility() {
       visibility: SessionVisibility;
     }) => api.sessions.updateVisibility(sessionId, visibility),
     onSuccess: (data) => {
-      queryClient.setQueryData(["session", data.id], data);
+      queryClient.setQueryData(["session", data.short_id], data);
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });
@@ -122,7 +122,7 @@ export function useEndSession() {
   return useMutation({
     mutationFn: (sessionId: string) => api.sessions.end(sessionId),
     onSuccess: (data) => {
-      queryClient.setQueryData(["session", data.id], data);
+      queryClient.setQueryData(["session", data.short_id], data);
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });

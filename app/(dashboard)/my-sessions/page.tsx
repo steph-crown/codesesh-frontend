@@ -23,6 +23,7 @@ import {
 } from "@/hooks/use-sessions";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useSidebar } from "@/hooks/use-sidebar";
+import { generateSessionName } from "@/lib/session-names";
 import {
   SessionFilters,
   type FilterValue,
@@ -58,8 +59,6 @@ export default function MySessionsPage() {
 
   const [filter, setFilter] = useState<FilterValue>("all");
   const [search, setSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [sessionName, setSessionName] = useState("");
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -74,19 +73,17 @@ export default function MySessionsPage() {
     return list;
   }, [sessions, filter, search]);
 
-  function handleCreate() {
-    const name = sessionName.trim();
-    if (!name) return;
-    createSession.mutate(
-      { name, language: "typescript" },
-      {
-        onSuccess: (session) => {
-          setCreateOpen(false);
-          setSessionName("");
-          router.push(`/sessions/${session.id}`);
+  function handleNewSession() {
+    requireAuth(() => {
+      createSession.mutate(
+        { name: generateSessionName(), language: "typescript" },
+        {
+          onSuccess: (session) => {
+            router.push(`/sessions/${session.short_id}`);
+          },
         },
-      },
-    );
+      );
+    });
   }
 
   function handleRename() {
@@ -102,10 +99,10 @@ export default function MySessionsPage() {
     );
   }
 
-  function openRename(id: string) {
-    const session = sessions.find((s) => s.id === id);
+  function openRename(shortId: string) {
+    const session = sessions.find((s) => s.short_id === shortId);
     if (!session) return;
-    setRenameId(id);
+    setRenameId(shortId);
     setRenameValue(session.name);
   }
 
@@ -134,10 +131,12 @@ export default function MySessionsPage() {
           <h1 className="text-2xl font-bold text-[#0A0A0A]">Sessions</h1>
         </div>
         <Button
-          onClick={() => requireAuth(() => setCreateOpen(true))}
+          onClick={handleNewSession}
+          disabled={createSession.isPending}
           className="h-10 px-5"
         >
-          New session
+          {createSession.isPending && <Spinner />}
+          {createSession.isPending ? "Creating..." : "New session"}
         </Button>
       </div>
 
@@ -180,41 +179,6 @@ export default function MySessionsPage() {
           />
         )}
       </div>
-
-      {/* Create session dialog */}
-      <Dialog
-        open={createOpen}
-        onOpenChange={(o) => {
-          if (!createSession.isPending) setCreateOpen(o);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl">New session</DialogTitle>
-            <DialogDescription>
-              Give your coding session a name.
-            </DialogDescription>
-          </DialogHeader>
-          <input
-            type="text"
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            placeholder="e.g. React Dashboard"
-            autoFocus
-            disabled={createSession.isPending}
-            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
-          <Button
-            onClick={handleCreate}
-            disabled={createSession.isPending || !sessionName.trim()}
-            className="h-12 w-full"
-          >
-            {createSession.isPending && <Spinner />}
-            {createSession.isPending ? "Creating..." : "Create Session"}
-          </Button>
-        </DialogContent>
-      </Dialog>
 
       {/* Rename dialog */}
       <Dialog

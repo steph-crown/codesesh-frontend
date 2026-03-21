@@ -10,8 +10,6 @@ import {
   Login01Icon,
   Search01Icon,
 } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +17,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   CommandDialog,
   CommandInput,
@@ -28,6 +28,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
 import { useSidebar } from "@/hooks/use-sidebar";
 import {
   useSessions,
@@ -37,6 +38,8 @@ import {
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useUserStore } from "@/stores/user-store";
 import { getColorByName } from "@/lib/colors";
+import { generateSessionName } from "@/lib/session-names";
+import { extractSessionCode } from "@/lib/join-code";
 import { cn } from "@/lib/utils";
 
 function getInitials(name: string) {
@@ -62,39 +65,40 @@ export function Sidebar() {
   const sessions = sessionsData?.data ?? [];
 
   const [joinOpen, setJoinOpen] = useState(false);
-  const [joinId, setJoinId] = useState("");
+  const [joinInput, setJoinInput] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [sessionName, setSessionName] = useState("");
 
-  function handleCreate() {
-    const name = sessionName.trim();
-    if (!name) return;
-    createSession.mutate(
-      { name, language: "typescript" },
-      {
-        onSuccess: (session) => {
-          setCreateOpen(false);
-          setSessionName("");
-          router.push(`/sessions/${session.id}`);
+  function handleNewSession() {
+    requireAuth(() => {
+      createSession.mutate(
+        { name: generateSessionName(), language: "typescript" },
+        {
+          onSuccess: (session) => {
+            router.push(`/sessions/${session.short_id}`);
+          },
         },
-      },
-    );
+      );
+    });
   }
 
   function handleJoin() {
-    const sid = joinId.trim();
-    if (!sid) return;
-    joinSession.mutate(sid, {
+    const raw = joinInput.trim();
+    if (!raw) return;
+    const code = extractSessionCode(raw);
+    if (!code) {
+      toast.error("Invalid session code or link.");
+      return;
+    }
+    joinSession.mutate(code, {
       onSuccess: () => {
         setJoinOpen(false);
-        setJoinId("");
-        router.push(`/sessions/${sid}`);
+        setJoinInput("");
+        router.push(`/sessions/${code}`);
       },
       onError: () => {
         setJoinOpen(false);
-        setJoinId("");
-        router.push(`/sessions/${sid}`);
+        setJoinInput("");
+        router.push(`/sessions/${code}`);
       },
     });
   }
@@ -153,14 +157,19 @@ export function Sidebar() {
         )}
       >
         <button
-          onClick={() => requireAuth(() => setCreateOpen(true))}
+          onClick={handleNewSession}
+          disabled={createSession.isPending}
           className={cn(
-            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0] disabled:opacity-50",
             !showLabels && "w-10 justify-center px-0",
           )}
         >
-          <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2} />
-          {showLabels && "New session"}
+          {createSession.isPending ? (
+            <Spinner className="size-[18px]" />
+          ) : (
+            <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2} />
+          )}
+          {showLabels && (createSession.isPending ? "Creating..." : "New session")}
         </button>
         <button
           onClick={() => requireAuth(() => setJoinOpen(true))}
@@ -194,7 +203,7 @@ export function Sidebar() {
             {recent.map((s) => (
               <Link
                 key={s.id}
-                href={`/sessions/${s.id}`}
+                href={`/sessions/${s.short_id}`}
                 onClick={() => setMobileOpen(false)}
                 className="block truncate rounded-lg px-2.5 py-1.5 text-sm text-[#4B5563] transition-colors hover:bg-[#FAF5F0] hover:text-[#0A0A0A]"
               >
@@ -271,41 +280,6 @@ export function Sidebar() {
         {sidebarContent}
       </aside>
 
-      {/* Create session dialog */}
-      <Dialog
-        open={createOpen}
-        onOpenChange={(o) => {
-          if (!createSession.isPending) setCreateOpen(o);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl">New session</DialogTitle>
-            <DialogDescription>
-              Give your coding session a name.
-            </DialogDescription>
-          </DialogHeader>
-          <input
-            type="text"
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            placeholder="e.g. React Dashboard"
-            autoFocus
-            disabled={createSession.isPending}
-            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
-          <Button
-            onClick={handleCreate}
-            disabled={createSession.isPending || !sessionName.trim()}
-            className="h-12 w-full"
-          >
-            {createSession.isPending && <Spinner />}
-            {createSession.isPending ? "Creating..." : "Create Session"}
-          </Button>
-        </DialogContent>
-      </Dialog>
-
       {/* Join session dialog */}
       <Dialog
         open={joinOpen}
@@ -317,14 +291,14 @@ export function Sidebar() {
           <DialogHeader>
             <DialogTitle className="text-xl">Join a session</DialogTitle>
             <DialogDescription>
-              Enter the session ID shared with you to join.
+              Enter the session code or link shared with you.
             </DialogDescription>
           </DialogHeader>
           <input
             type="text"
-            value={joinId}
-            onChange={(e) => setJoinId(e.target.value)}
-            placeholder="Paste session ID"
+            value={joinInput}
+            onChange={(e) => setJoinInput(e.target.value)}
+            placeholder="e.g. abc-def-ghj or paste link"
             autoFocus
             disabled={joinSession.isPending}
             className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
@@ -332,7 +306,7 @@ export function Sidebar() {
           />
           <Button
             onClick={handleJoin}
-            disabled={joinSession.isPending || !joinId.trim()}
+            disabled={joinSession.isPending || !joinInput.trim()}
             className="h-12 w-full"
           >
             {joinSession.isPending && <Spinner />}
@@ -353,7 +327,7 @@ export function Sidebar() {
                 value={s.name}
                 onSelect={() => {
                   setSearchOpen(false);
-                  router.push(`/sessions/${s.id}`);
+                  router.push(`/sessions/${s.short_id}`);
                 }}
               >
                 {s.name}

@@ -45,6 +45,16 @@ export async function apiFetch<T>(
     } catch {
       errorData = { code: "UNKNOWN", message: res.statusText };
     }
+
+    if (errorData.code === "USER_NOT_FOUND") {
+      useUserStore.getState().clear();
+      return new Promise<T>((resolve, reject) => {
+        useUserStore.getState().requestIdentity(() => {
+          apiFetch<T>(path, options).then(resolve).catch(reject);
+        });
+      });
+    }
+
     throw new ApiError(errorData.code, errorData.message, res.status);
   }
 

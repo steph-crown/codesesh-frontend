@@ -40,7 +40,7 @@ export function SessionCard({
 
   return (
     <Link
-      href={`/sessions/${session.id}`}
+      href={`/sessions/${session.short_id}`}
       className="group relative block rounded-[1rem] border border-[#ededea] bg-white p-8 transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-4">
@@ -100,7 +100,7 @@ export function SessionCard({
                   e.preventDefault();
                   e.stopPropagation();
                   setMenuOpen(false);
-                  onRename(session.id);
+                  onRename(session.short_id);
                 }}
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]"
               >
@@ -132,7 +132,7 @@ export function SessionCard({
                   e.preventDefault();
                   e.stopPropagation();
                   setMenuOpen(false);
-                  onEnd(session.id);
+                  onEnd(session.short_id);
                 }}
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-50"
               >

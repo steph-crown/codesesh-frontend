@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -61,20 +61,19 @@ export function SessionToolbar({
   const updateVisibility = useUpdateSessionVisibility();
 
   const [shareOpen, setShareOpen] = useState(false);
-  const [title, setTitle] = useState(session.name);
-  const [editingTitle, setEditingTitle] = useState(false);
+  const [draft, setDraft] = useState<string | null>(null);
+  const editingTitle = draft !== null;
+  const title = draft ?? session.name;
 
-  useEffect(() => {
-    if (!editingTitle) setTitle(session.name);
-  }, [session.name, editingTitle]);
+  function startEditing() {
+    if (session.is_owner) setDraft(session.name);
+  }
 
   function handleTitleCommit() {
-    setEditingTitle(false);
-    const trimmed = title.trim();
+    const trimmed = (draft ?? "").trim();
+    setDraft(null);
     if (trimmed && trimmed !== session.name) {
-      updateName.mutate({ sessionId: session.id, name: trimmed });
-    } else {
-      setTitle(session.name);
+      updateName.mutate({ sessionId: session.short_id, name: trimmed });
     }
   }
 
@@ -91,21 +90,18 @@ export function SessionToolbar({
           {editingTitle ? (
             <input
               autoFocus
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
               onBlur={handleTitleCommit}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleTitleCommit();
-                if (e.key === "Escape") {
-                  setTitle(session.name);
-                  setEditingTitle(false);
-                }
+                if (e.key === "Escape") setDraft(null);
               }}
               className="h-7 w-32 shrink-0 rounded-md bg-white/10 px-2 text-sm font-medium text-[#F9FAFB] outline-none ring-1 ring-[#ff3c00]/50 md:w-40"
             />
           ) : (
             <button
-              onClick={() => session.is_owner && setEditingTitle(true)}
+              onClick={startEditing}
               className="truncate rounded-md px-2 py-1 text-sm font-medium text-[#F9FAFB] transition-colors hover:bg-white/5"
             >
               {title}
@@ -246,12 +242,12 @@ export function SessionToolbar({
       <ShareDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        sessionId={session.id}
+        sessionId={session.short_id}
         visibility={session.visibility}
         isOwner={session.is_owner}
         onVisibilityChange={(vis) => {
           updateVisibility.mutate({
-            sessionId: session.id,
+            sessionId: session.short_id,
             visibility: vis,
           });
         }}

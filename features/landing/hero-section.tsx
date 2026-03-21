@@ -104,7 +104,7 @@ export function HeroSection() {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="What should we call you?"
               disabled={isPending}
-              className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-center text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
+              className="w-full h-12 rounded-full bg-white border border-[#DFDDD7] px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-[#9CA3AF]"
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
           )}
