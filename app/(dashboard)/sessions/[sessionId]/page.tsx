@@ -4,6 +4,7 @@ import { use, useEffect } from "react";
 import { useSession, useJoinSession } from "@/hooks/use-sessions";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useUserStore } from "@/stores/user-store";
+import { ApiError } from "@/lib/api-client";
 import { Spinner } from "@/components/ui/spinner";
 import { SessionPage } from "@/features/session/session-page";
 
@@ -14,17 +15,15 @@ export default function SessionRoute({
 }) {
   const { sessionId } = use(params);
   const userId = useUserStore((s) => s.userId);
-  const hasHydrated = useUserStore((s) => s._hasHydrated);
   const requireAuth = useRequireAuth();
   const joinSession = useJoinSession();
   const { data: session, isLoading, error } = useSession(sessionId);
 
   useEffect(() => {
-    if (!hasHydrated) return;
     if (!userId) {
       requireAuth(() => {});
     }
-  }, [hasHydrated, userId, requireAuth]);
+  }, [userId, requireAuth]);
 
   useEffect(() => {
     if (userId && sessionId) {
@@ -33,7 +32,7 @@ export default function SessionRoute({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, sessionId]);
 
-  if (!hasHydrated || isLoading) {
+  if (!userId || isLoading) {
     return (
       <div className="dark flex size-full items-center justify-center bg-[#020617]">
         <Spinner className="size-6 text-white/60" />
@@ -41,22 +40,12 @@ export default function SessionRoute({
     );
   }
 
-  if (!userId) {
-    return (
-      <div className="dark flex size-full items-center justify-center bg-[#020617]">
-        <p className="text-sm text-[#9CA3AF]">
-          Enter your name to join this session.
-        </p>
-      </div>
-    );
-  }
-
-  if (error) {
+  const isAuthError =
+    error instanceof ApiError && error.code === "USER_NOT_FOUND";
+  if (error && !isAuthError) {
     return (
       <div className="dark flex size-full flex-col items-center justify-center gap-2 bg-[#020617]">
-        <p className="text-lg font-medium text-[#F9FAFB]">
-          Session not found
-        </p>
+        <p className="text-lg font-medium text-[#F9FAFB]">Session not found</p>
         <p className="text-sm text-[#9CA3AF]">
           This session may have been deleted or you don&apos;t have access.
         </p>

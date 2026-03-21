@@ -5,11 +5,9 @@ interface UserStore {
   userId: string | null;
   displayName: string | null;
   color: string | null;
-  _hasHydrated: boolean;
 
   setUser: (id: string, name: string, color: string) => void;
   clear: () => void;
-  setHasHydrated: (v: boolean) => void;
 
   pendingAction: (() => void) | null;
   requestIdentity: (onComplete: () => void) => void;
@@ -23,12 +21,10 @@ export const useUserStore = create<UserStore>()(
       userId: null,
       displayName: null,
       color: null,
-      _hasHydrated: false,
 
       setUser: (id, name, color) =>
         set({ userId: id, displayName: name, color }),
       clear: () => set({ userId: null, displayName: null, color: null }),
-      setHasHydrated: (v) => set({ _hasHydrated: v }),
 
       pendingAction: null,
       requestIdentity: (onComplete) => set({ pendingAction: onComplete }),
@@ -46,11 +42,6 @@ export const useUserStore = create<UserStore>()(
         displayName: state.displayName,
         color: state.color,
       }),
-      onRehydrateStorage: () => (_state, error) => {
-        if (!error) {
-          useUserStore.setState({ _hasHydrated: true });
-        }
-      },
     },
   ),
 );

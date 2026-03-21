@@ -13,9 +13,8 @@ export function useSyncCurrentUser() {
   const userId = useUserStore((s) => s.userId);
   const color = useUserStore((s) => s.color);
   const setUser = useUserStore((s) => s.setUser);
-  const hasHydrated = useUserStore((s) => s._hasHydrated);
 
-  const shouldFetch = hasHydrated && !!userId && !color;
+  const shouldFetch = !!userId && !color;
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
