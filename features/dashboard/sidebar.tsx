@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
@@ -53,6 +53,7 @@ function getInitials(name: string) {
 
 export function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar();
   const { data: sessionsData } = useSessions();
   const userId = useUserStore((s) => s.userId);
@@ -200,16 +201,24 @@ export function Sidebar() {
             Recent sessions
           </p>
           <div className="flex flex-col gap-0.5">
-            {recent.map((s) => (
-              <Link
-                key={s.id}
-                href={`/sessions/${s.short_id}`}
-                onClick={() => setMobileOpen(false)}
-                className="block truncate rounded-lg px-2.5 py-1.5 text-sm text-[#4B5563] transition-colors hover:bg-[#FAF5F0] hover:text-[#0A0A0A]"
-              >
-                {s.name}
-              </Link>
-            ))}
+            {recent.map((s) => {
+              const active = pathname === `/sessions/${s.short_id}`;
+              return (
+                <Link
+                  key={s.id}
+                  href={`/sessions/${s.short_id}`}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "block truncate rounded-lg px-2.5 py-1.5 text-sm transition-colors",
+                    active
+                      ? "bg-[#FAF5F0] font-medium text-[#0A0A0A]"
+                      : "text-[#4B5563] hover:bg-[#FAF5F0] hover:text-[#0A0A0A]",
+                  )}
+                >
+                  {s.name}
+                </Link>
+              );
+            })}
             {recent.length === 0 && (
               <p className="px-2.5 py-1.5 text-sm text-[#9CA3AF]">
                 No sessions yet
