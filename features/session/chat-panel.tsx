@@ -17,8 +17,19 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], {
+function parseDate(value: unknown): Date {
+  if (Array.isArray(value)) {
+    const [year, dayOfYear, hour, minute, second] = value as number[];
+    const d = new Date(Date.UTC(year, 0, 1));
+    d.setUTCDate(d.getUTCDate() + dayOfYear - 1);
+    d.setUTCHours(hour, minute, second);
+    return d;
+  }
+  return new Date(value as string);
+}
+
+function formatTime(value: unknown) {
+  return parseDate(value).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });

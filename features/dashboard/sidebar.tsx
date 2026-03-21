@@ -9,6 +9,7 @@ import {
   PlusSignIcon,
   Login01Icon,
   Search01Icon,
+  Folder02Icon,
 } from "@hugeicons/core-free-icons";
 import {
   Dialog,
@@ -68,6 +69,13 @@ export function Sidebar() {
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinInput, setJoinInput] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: searchData } = useSessions(
+    searchQuery.trim() ? { search: searchQuery.trim() } : undefined,
+  );
+  const searchResults = searchQuery.trim()
+    ? (searchData?.data ?? [])
+    : sessions;
 
   function handleNewSession() {
     requireAuth(() => {
@@ -192,6 +200,20 @@ export function Sidebar() {
           <HugeiconsIcon icon={Search01Icon} size={18} strokeWidth={2} />
           {showLabels && "Search"}
         </button>
+        <Link
+          href="/my-sessions"
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
+            pathname === "/my-sessions"
+              ? "bg-[#FAF5F0] text-[#0A0A0A]"
+              : "text-[#0A0A0A] hover:bg-[#FAF5F0]",
+            !showLabels && "w-10 justify-center px-0",
+          )}
+        >
+          <HugeiconsIcon icon={Folder02Icon} size={18} strokeWidth={2} />
+          {showLabels && "My Sessions"}
+        </Link>
       </div>
 
       {/* Recent sessions */}
@@ -325,17 +347,28 @@ export function Sidebar() {
       </Dialog>
 
       {/* Command palette */}
-      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <CommandInput placeholder="Search sessions..." />
+      <CommandDialog
+        open={searchOpen}
+        onOpenChange={(o) => {
+          setSearchOpen(o);
+          if (!o) setSearchQuery("");
+        }}
+      >
+        <CommandInput
+          placeholder="Search sessions..."
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+        />
         <CommandList>
           <CommandEmpty>No sessions found.</CommandEmpty>
           <CommandGroup heading="Sessions">
-            {sessions.map((s) => (
+            {searchResults.map((s) => (
               <CommandItem
                 key={s.id}
                 value={s.name}
                 onSelect={() => {
                   setSearchOpen(false);
+                  setSearchQuery("");
                   router.push(`/sessions/${s.short_id}`);
                 }}
               >

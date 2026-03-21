@@ -10,20 +10,20 @@ export interface SessionSummary {
   status: SessionStatus;
   event_count: number;
   is_owner: boolean;
-  last_activity_at: string;
-  created_at: string;
+  last_activity_at: unknown;
+  created_at: unknown;
 }
 
 export interface SessionDetail extends SessionSummary {
   content: string;
-  updated_at: string;
+  updated_at: unknown;
 }
 
 export interface Participant {
   user_id: string;
   display_name: string;
   color: string;
-  joined_at: string;
+  joined_at: unknown;
   is_active: boolean;
 }
 
@@ -34,7 +34,7 @@ export interface ChatMessage {
   display_name: string;
   color: string;
   content: string;
-  created_at: string;
+  created_at: unknown;
 }
 
 export interface PaginatedResponse<T> {
