@@ -1,10 +1,15 @@
 "use client";
 
-import { useRef, useImperativeHandle, forwardRef } from "react";
+import { useRef, useImperativeHandle, forwardRef, useEffect } from "react";
 import Editor, { type OnMount } from "@monaco-editor/react";
 import { LANGUAGES } from "./language-selector";
 
 type MonacoEditor = Parameters<OnMount>[0];
+
+type SuggestControllerApi = {
+  stopForceRenderingAbove: () => void;
+  forceRenderingAbove: () => void;
+};
 
 export type EditorPanelHandle = {
   getCode: () => string;
@@ -379,6 +384,7 @@ export const EditorPanel = forwardRef<
   { language: string; readOnly?: boolean; initialContent?: string }
 >(function EditorPanel({ language, readOnly = false, initialContent }, ref) {
   const editorRef = useRef<MonacoEditor | null>(null);
+  const suggestPrefSubRef = useRef<{ dispose: () => void } | null>(null);
 
   useImperativeHandle(ref, () => ({
     getCode: () => editorRef.current?.getValue() ?? "",
@@ -387,9 +393,42 @@ export const EditorPanel = forwardRef<
   const monacoLang =
     LANGUAGES.find((l) => l.id === language)?.monacoId ?? "typescript";
 
+  // Empty string from API must show an empty editor, not the template — use `??` / explicit undefined check, not `||`.
+  const defaultValue =
+    initialContent !== undefined
+      ? initialContent
+      : (DEFAULT_CODE[language] ?? DEFAULT_CODE.typescript);
+
+  useEffect(() => {
+    return () => {
+      suggestPrefSubRef.current?.dispose();
+      suggestPrefSubRef.current = null;
+    };
+  }, []);
+
   const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
     editor.focus();
+
+    const applySuggestWidgetPreference = () => {
+      const pos = editor.getPosition();
+      const ctrl = editor.getContribution(
+        "editor.contrib.suggestController",
+      ) as SuggestControllerApi | null;
+      if (!ctrl || !pos) return;
+      // Lines 1–2: prefer below (avoid clipping under session toolbar). Line 3+: prefer above.
+      if (pos.lineNumber <= 2) {
+        ctrl.stopForceRenderingAbove();
+      } else {
+        ctrl.forceRenderingAbove();
+      }
+    };
+
+    suggestPrefSubRef.current?.dispose();
+    suggestPrefSubRef.current = editor.onDidChangeCursorPosition(
+      applySuggestWidgetPreference,
+    );
+    applySuggestWidgetPreference();
   };
 
   return (
@@ -397,11 +436,12 @@ export const EditorPanel = forwardRef<
       <Editor
         height="100%"
         language={monacoLang}
-        defaultValue={initialContent || DEFAULT_CODE[language] || DEFAULT_CODE.typescript}
+        defaultValue={defaultValue}
         theme="vs-dark"
         onMount={handleMount}
         options={{
           readOnly,
+          fixedOverflowWidgets: true,
           fontSize: 14,
           fontFamily: "var(--font-jetbrains), monospace",
           minimap: { enabled: false },

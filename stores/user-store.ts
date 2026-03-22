@@ -22,12 +22,17 @@ export const useUserStore = create<UserStore>()(
       displayName: null,
       color: null,
 
-      setUser: (id, name, color) =>
-        set({ userId: id, displayName: name, color }),
-      clear: () => set({ userId: null, displayName: null, color: null }),
+      setUser: (id, name, color) => {
+        set({ userId: id, displayName: name, color });
+      },
+      clear: () => {
+        set({ userId: null, displayName: null, color: null });
+      },
 
       pendingAction: null,
-      requestIdentity: (onComplete) => set({ pendingAction: onComplete }),
+      requestIdentity: (onComplete) => {
+        set({ pendingAction: onComplete });
+      },
       resolvePending: () => {
         const action = get().pendingAction;
         set({ pendingAction: null });

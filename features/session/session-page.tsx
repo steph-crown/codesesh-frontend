@@ -417,7 +417,7 @@ export function SessionPage({
             ref={codeEditorRef}
             language={language}
             readOnly={readOnly}
-            initialContent={session.content || undefined}
+            initialContent={session.content}
           />
         )}
         {mobileTab === "terminal" && (
@@ -460,7 +460,7 @@ export function SessionPage({
               ref={codeEditorRef}
               language={language}
               readOnly={readOnly}
-              initialContent={session.content || undefined}
+              initialContent={session.content}
             />
           </div>
 

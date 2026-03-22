@@ -147,3 +147,11 @@
     @apply font-sans;
   }
 }
+
+/* Monaco: overflow widgets above session toolbar / layout chrome */
+.monaco-editor .suggest-widget,
+.monaco-editor .suggest-details-container,
+.monaco-editor .parameter-hints-widget,
+.monaco-editor .monaco-hover {
+  z-index: 90 !important;
+}

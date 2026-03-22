@@ -1,4 +1,5 @@
 import { useUserStore } from "@/stores/user-store";
+import { waitForPersistHydration } from "@/lib/wait-for-persist-hydration";
 
 const API_BASE = "/backend";
 
@@ -18,6 +19,8 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  await waitForPersistHydration();
+
   const userId = useUserStore.getState().userId;
 
   const headers: Record<string, string> = {
@@ -47,10 +50,14 @@ export async function apiFetch<T>(
     }
 
     if (errorData.code === "USER_NOT_FOUND") {
-      const store = useUserStore.getState();
-      store.clear();
-      if (!store.pendingAction) {
-        store.requestIdentity(() => {});
+      useUserStore.getState().clear();
+      // Only prompt after persist has run — avoids opening the modal during
+      // the brief window before rehydration when requests must not be trusted.
+      const willPrompt =
+        useUserStore.persist.hasHydrated() &&
+        !useUserStore.getState().pendingAction;
+      if (willPrompt) {
+        useUserStore.getState().requestIdentity(() => {});
       }
     }
 

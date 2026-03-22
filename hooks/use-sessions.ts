@@ -4,17 +4,18 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useUserStore } from "@/stores/user-store";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 import type {
   GetSessionsQuery,
   SessionVisibility,
 } from "@/lib/api-types";
 
 export function useSyncCurrentUser() {
-  const userId = useUserStore((s) => s.userId);
+  const authReady = useAuthReady();
   const color = useUserStore((s) => s.color);
   const setUser = useUserStore((s) => s.setUser);
 
-  const shouldFetch = !!userId && !color;
+  const shouldFetch = authReady && !color;
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -32,43 +33,43 @@ export function useSyncCurrentUser() {
 }
 
 export function useSessions(query?: GetSessionsQuery) {
-  const userId = useUserStore((s) => s.userId);
+  const authReady = useAuthReady();
 
   return useQuery({
     queryKey: ["sessions", query],
     queryFn: () => api.sessions.list(query),
-    enabled: !!userId,
+    enabled: authReady,
   });
 }
 
 export function useSession(sessionId: string) {
-  const userId = useUserStore((s) => s.userId);
+  const authReady = useAuthReady();
 
   return useQuery({
     queryKey: ["session", sessionId],
     queryFn: () => api.sessions.get(sessionId),
-    enabled: !!sessionId && !!userId,
+    enabled: !!sessionId && authReady,
   });
 }
 
 export function useParticipants(sessionId: string) {
-  const userId = useUserStore((s) => s.userId);
+  const authReady = useAuthReady();
 
   return useQuery({
     queryKey: ["participants", sessionId],
     queryFn: () => api.sessions.getParticipants(sessionId),
-    enabled: !!sessionId && !!userId,
+    enabled: !!sessionId && authReady,
     refetchInterval: 15_000,
   });
 }
 
 export function useMessages(sessionId: string) {
-  const userId = useUserStore((s) => s.userId);
+  const authReady = useAuthReady();
 
   return useQuery({
     queryKey: ["messages", sessionId],
     queryFn: () => api.sessions.getMessages(sessionId),
-    enabled: !!sessionId && !!userId,
+    enabled: !!sessionId && authReady,
   });
 }
 

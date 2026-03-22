@@ -3,6 +3,8 @@
 import { use, useEffect, useRef, useState } from "react";
 import { useSession, useJoinSession } from "@/hooks/use-sessions";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useAuthReady } from "@/hooks/use-auth-ready";
+import { useUserPersistHydrated } from "@/hooks/use-user-persist-hydrated";
 import { useUserStore } from "@/stores/user-store";
 import { ApiError } from "@/lib/api-client";
 import { SessionPage } from "@/features/session/session-page";
@@ -33,6 +35,8 @@ export default function SessionRoute({
   params: Promise<{ sessionId: string }>;
 }>) {
   const { sessionId } = use(params);
+  const hydrated = useUserPersistHydrated();
+  const authReady = useAuthReady();
   const userId = useUserStore((s) => s.userId);
   const requireAuth = useRequireAuth();
   const joinSession = useJoinSession();
@@ -52,12 +56,27 @@ export default function SessionRoute({
   const joinError =
     joinErrorEntry?.sid === sessionId ? joinErrorEntry.error : null;
 
-  // Step 1 — Identity check: if no userId, prompt for name
+  // Identity: after rehydration, if there is truly no user id, open the modal.
+  // Do NOT call requireAuth synchronously when !authReady: right after hydration,
+  // `hasHydrated()` / `hydrated` can be true while `userId` is still briefly null in
+  // the React subscription (and Fast Refresh can widen that gap). Defer + re-read
+  // the store so we don't flash the modal for returning users.
   useEffect(() => {
-    if (!userId) {
+    if (!hydrated) return;
+    if (authReady) return;
+
+    let cancelled = false;
+    const t = globalThis.window.setTimeout(() => {
+      if (cancelled) return;
+      if (useUserStore.getState().userId) return;
       requireAuth(() => {});
-    }
-  }, [userId, requireAuth]);
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      globalThis.window.clearTimeout(t);
+    };
+  }, [hydrated, authReady, requireAuth]);
 
   // Step 5 — Join session (only after session data is available and checks pass)
   useEffect(() => {
@@ -94,8 +113,8 @@ export default function SessionRoute({
     hasShownEndedToastRef.current = false;
   }, [sessionId]);
 
-  // Step 1 continued — waiting for identity or session fetch
-  if (!userId || isLoading) {
+  // Wait until persist + user id before session query (and avoid identity flash)
+  if (!authReady || isLoading) {
     return <SessionRouteLoading />;
   }
 
