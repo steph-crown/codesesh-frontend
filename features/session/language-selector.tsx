@@ -34,10 +34,12 @@ export function LanguageSelector({
   value,
   onChange,
   className,
+  disabled = false,
 }: {
   value: string;
   onChange: (languageId: string) => void;
   className?: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -62,8 +64,11 @@ export function LanguageSelector({
   return (
     <div ref={ref} className={cn("relative", className)}>
       <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
+        onClick={() => !disabled && setOpen(!open)}
+        className={cn(
+          "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-[#9CA3AF] transition-colors",
+          disabled ? "cursor-default opacity-60" : "hover:bg-white/5 hover:text-[#F9FAFB]",
+        )}
       >
         {current.label}
         <svg

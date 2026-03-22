@@ -376,8 +376,8 @@ two_sum([Num | Rest], Target, Seen) ->
 
 export const EditorPanel = forwardRef<
   EditorPanelHandle,
-  { language: string }
->(function EditorPanel({ language }, ref) {
+  { language: string; readOnly?: boolean; initialContent?: string }
+>(function EditorPanel({ language, readOnly = false, initialContent }, ref) {
   const editorRef = useRef<MonacoEditor | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -397,10 +397,11 @@ export const EditorPanel = forwardRef<
       <Editor
         height="100%"
         language={monacoLang}
-        defaultValue={DEFAULT_CODE[language] ?? DEFAULT_CODE.typescript}
+        defaultValue={initialContent || DEFAULT_CODE[language] || DEFAULT_CODE.typescript}
         theme="vs-dark"
         onMount={handleMount}
         options={{
+          readOnly,
           fontSize: 14,
           fontFamily: "var(--font-jetbrains), monospace",
           minimap: { enabled: false },

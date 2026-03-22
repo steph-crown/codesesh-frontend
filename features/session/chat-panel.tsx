@@ -104,12 +104,14 @@ export function ChatPanel({
   currentUserId,
   onSend,
   className,
+  disabled = false,
 }: {
   messages: ChatMessage[];
   participants: Participant[];
   currentUserId: string;
   onSend: (content: string) => void;
   className?: string;
+  disabled?: boolean;
 }) {
   const [input, setInput] = useState("");
   const [mentionOpen, setMentionOpen] = useState(false);
@@ -189,49 +191,57 @@ export function ChatPanel({
         ))}
       </div>
 
-      <div className="relative shrink-0 border-t border-white/5 p-2">
-        {mentionOpen && filteredParticipants.length > 0 && (
-          <div className="absolute bottom-full left-2 right-2 mb-1 rounded-lg border border-white/10 bg-[#111827] p-1 shadow-lg">
-            {filteredParticipants.map((p) => (
-              <button
-                key={p.user_id}
-                onClick={() => insertMention(p.display_name)}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
-              >
-                <Avatar size="sm">
-                  <AvatarFallback color={getColorByName(p.color)}>
-                    {getInitials(p.display_name)}
-                  </AvatarFallback>
-                </Avatar>
-                {p.display_name}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Type a message... Use @ to mention"
-            className="flex-1 bg-transparent text-xs text-[#D1D5DB] outline-none placeholder:text-[#4B5563]"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#9CA3AF] transition-colors hover:text-[#ff3c00] disabled:opacity-30 disabled:hover:text-[#9CA3AF]"
-          >
-            <HugeiconsIcon icon={SentIcon} size={14} strokeWidth={2} />
-          </button>
+      {disabled ? (
+        <div className="shrink-0 border-t border-white/5 px-3 py-2.5">
+          <p className="text-center text-[10px] text-[#4B5563]">
+            This session has ended
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="relative shrink-0 border-t border-white/5 p-2">
+          {mentionOpen && filteredParticipants.length > 0 && (
+            <div className="absolute bottom-full left-2 right-2 mb-1 rounded-lg border border-white/10 bg-[#111827] p-1 shadow-lg">
+              {filteredParticipants.map((p) => (
+                <button
+                  key={p.user_id}
+                  onClick={() => insertMention(p.display_name)}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
+                >
+                  <Avatar size="sm">
+                    <AvatarFallback color={getColorByName(p.color)}>
+                      {getInitials(p.display_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {p.display_name}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Type a message... Use @ to mention"
+              className="flex-1 bg-transparent text-xs text-[#D1D5DB] outline-none placeholder:text-[#4B5563]"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#9CA3AF] transition-colors hover:text-[#ff3c00] disabled:opacity-30 disabled:hover:text-[#9CA3AF]"
+            >
+              <HugeiconsIcon icon={SentIcon} size={14} strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   PlayIcon,
   Share08Icon,
   Logout01Icon,
+  Delete01Icon,
   MoreVerticalIcon,
   Notification03Icon,
 } from "@hugeicons/core-free-icons";
@@ -21,7 +22,9 @@ import { getColorByName } from "@/lib/colors";
 import {
   useUpdateSessionName,
   useUpdateSessionVisibility,
+  useEndSession,
 } from "@/hooks/use-sessions";
+import { toast } from "sonner";
 import { LanguageSelector } from "./language-selector";
 import {
   ConnectionIndicator,
@@ -46,6 +49,7 @@ export function SessionToolbar({
   onLanguageChange,
   onRun,
   running = false,
+  readOnly = false,
   connectionStatus = "connected",
 }: {
   session: SessionDetail;
@@ -54,11 +58,28 @@ export function SessionToolbar({
   onLanguageChange: (lang: string) => void;
   onRun: () => void;
   running?: boolean;
+  readOnly?: boolean;
   connectionStatus?: ConnectionStatus;
 }) {
   const router = useRouter();
   const updateName = useUpdateSessionName();
   const updateVisibility = useUpdateSessionVisibility();
+  const endSession = useEndSession();
+
+  const isOwnerActive = session.is_owner && session.status === "active";
+
+  function handleLeaveOrEnd() {
+    if (isOwnerActive) {
+      endSession.mutate(session.short_id, {
+        onSuccess: () => {
+          toast.success("Session ended");
+          router.push("/my-sessions");
+        },
+      });
+    } else {
+      router.push("/my-sessions");
+    }
+  }
 
   const [shareOpen, setShareOpen] = useState(false);
   const [draft, setDraft] = useState<string | null>(null);
@@ -66,7 +87,7 @@ export function SessionToolbar({
   const title = draft ?? session.name;
 
   function startEditing() {
-    if (session.is_owner) setDraft(session.name);
+    if (session.is_owner && !readOnly) setDraft(session.name);
   }
 
   function handleTitleCommit() {
@@ -109,11 +130,11 @@ export function SessionToolbar({
           )}
 
           <span className="mx-1 text-[#4B5563]">/</span>
-          <LanguageSelector value={language} onChange={onLanguageChange} />
+          <LanguageSelector value={language} onChange={onLanguageChange} disabled={readOnly} />
 
           <button
             onClick={onRun}
-            disabled={running}
+            disabled={running || readOnly}
             className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/60 disabled:opacity-50"
           >
             {running ? (
@@ -163,11 +184,21 @@ export function SessionToolbar({
           <div className="h-4 w-px bg-white/10" />
 
           <button
-            onClick={() => router.push("/my-sessions")}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#DC2626]"
+            type="button"
+            onClick={handleLeaveOrEnd}
+            disabled={endSession.isPending}
+            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#DC2626] disabled:opacity-50"
           >
-            <HugeiconsIcon icon={Logout01Icon} size={14} strokeWidth={2} />
-            Leave
+            {endSession.isPending ? (
+              <span className="inline-block size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <HugeiconsIcon
+                icon={isOwnerActive ? Delete01Icon : Logout01Icon}
+                size={14}
+                strokeWidth={2}
+              />
+            )}
+            {isOwnerActive ? "End session" : "Leave"}
           </button>
         </div>
 
@@ -229,11 +260,21 @@ export function SessionToolbar({
             <div className="my-1 h-px bg-white/10" />
 
             <button
-              onClick={() => router.push("/my-sessions")}
-              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#DC2626] transition-colors hover:bg-white/5"
+              type="button"
+              onClick={handleLeaveOrEnd}
+              disabled={endSession.isPending}
+              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#DC2626] transition-colors hover:bg-white/5 disabled:opacity-50"
             >
-              <HugeiconsIcon icon={Logout01Icon} size={14} strokeWidth={2} />
-              Leave session
+              {endSession.isPending ? (
+                <span className="inline-block size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <HugeiconsIcon
+                  icon={isOwnerActive ? Delete01Icon : Logout01Icon}
+                  size={14}
+                  strokeWidth={2}
+                />
+              )}
+              {isOwnerActive ? "End session" : "Leave session"}
             </button>
           </PopoverContent>
         </Popover>

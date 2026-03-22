@@ -184,9 +184,11 @@ function DragHandle({
 export function SessionPage({
   session,
   sessionId,
+  readOnly = false,
 }: {
   session: SessionDetail;
   sessionId: string;
+  readOnly?: boolean;
 }) {
   const userId = useUserStore((s) => s.userId);
   const displayName = useUserStore((s) => s.displayName) ?? "Guest";
@@ -403,6 +405,7 @@ export function SessionPage({
         onLanguageChange={setLanguage}
         onRun={runCode}
         running={running}
+        readOnly={readOnly}
       />
 
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />
@@ -410,7 +413,12 @@ export function SessionPage({
       {/* Mobile panels */}
       <div className="flex-1 overflow-hidden p-2 md:hidden">
         {mobileTab === "editor" && (
-          <EditorPanel ref={codeEditorRef} language={language} />
+          <EditorPanel
+            ref={codeEditorRef}
+            language={language}
+            readOnly={readOnly}
+            initialContent={session.content || undefined}
+          />
         )}
         {mobileTab === "terminal" && (
           <TerminalPanel
@@ -425,6 +433,7 @@ export function SessionPage({
             participants={participants ?? []}
             currentUserId={userId ?? ""}
             onSend={handleSendMessage}
+            disabled={readOnly}
           />
         )}
       </div>
@@ -447,7 +456,12 @@ export function SessionPage({
             )}
             style={terminalCollapsed ? undefined : { height: `${DEFAULT_V}%` }}
           >
-            <EditorPanel ref={codeEditorRef} language={language} />
+            <EditorPanel
+              ref={codeEditorRef}
+              language={language}
+              readOnly={readOnly}
+              initialContent={session.content || undefined}
+            />
           </div>
 
           <DragHandle
@@ -488,6 +502,7 @@ export function SessionPage({
               participants={participants ?? []}
               currentUserId={userId ?? ""}
               onSend={handleSendMessage}
+              disabled={readOnly}
             />
           )}
         </div>
