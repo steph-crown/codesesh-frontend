@@ -14,6 +14,9 @@ import { CommandLineIcon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { useParticipants, useMessages } from "@/hooks/use-sessions";
 import { useUserStore } from "@/stores/user-store";
+import { useSessionContext } from "@/contexts/session-context";
+import type { SessionLanguageWire } from "@/lib/ws-messages";
+import type { ConnectionStatus } from "./connection-indicator";
 import { SessionToolbar } from "./session-toolbar";
 import { EditorPanel, type EditorPanelHandle } from "./editor-panel";
 import { TerminalPanel, type TerminalLine } from "./terminal-panel";
@@ -193,19 +196,49 @@ export function SessionPage({
   const userId = useUserStore((s) => s.userId);
   const displayName = useUserStore((s) => s.displayName) ?? "Guest";
   const userColor = useUserStore((s) => s.color) ?? "red";
+  const ctx = useSessionContext();
   const { data: participants } = useParticipants(sessionId);
   const { data: messagesData } = useMessages(sessionId);
 
   const apiMessages: ChatMessage[] = messagesData?.messages ?? [];
 
+  const mergedParticipants =
+    ctx.participants.length > 0 ? ctx.participants : (participants ?? []);
+  const mergedMessages =
+    ctx.messages.length > 0 ? ctx.messages : apiMessages;
+
+  const connectionStatus: ConnectionStatus =
+    session.status === "ended"
+      ? "connected"
+      : ctx.connectionState === "connected"
+        ? "connected"
+        : ctx.connectionState === "reconnecting" ||
+            ctx.connectionState === "connecting" ||
+            ctx.connectionState === "idle"
+          ? "reconnecting"
+          : "disconnected";
+
+  const readOnlyCombined = readOnly || ctx.sessionEnded;
+
   const [language, setLanguage] = useState(session.language || "typescript");
+
+  useEffect(() => {
+    setLanguage(ctx.language);
+  }, [ctx.language]);
+
+  function handleLanguageChange(lang: string) {
+    setLanguage(lang);
+    if (ctx.connectionState === "connected") {
+      ctx.sendLanguageChange(lang as SessionLanguageWire);
+    }
+  }
   const [mobileTab, setMobileTab] = useState<MobileTab>("editor");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [terminalLines, setTerminalLines] = useState<TerminalLine[]>([]);
   const [running, setRunning] = useState(false);
   const codeEditorRef = useRef<EditorPanelHandle>(null);
 
-  const allMessages = [...apiMessages, ...localMessages];
+  const allMessages = [...mergedMessages, ...localMessages];
 
   const [terminalCollapsed, setTerminalCollapsed] = useState(() =>
     isClient() ? storageBool(V_COLLAPSED_KEY, false) : false,
@@ -382,6 +415,10 @@ export function SessionPage({
   }
 
   function handleSendMessage(content: string) {
+    if (ctx.connectionState === "connected") {
+      ctx.sendChatMessage(content);
+      return;
+    }
     setLocalMessages((prev) => [
       ...prev,
       {
@@ -400,12 +437,13 @@ export function SessionPage({
     <div className="dark flex size-full flex-col bg-[#020617]">
       <SessionToolbar
         session={session}
-        participants={participants ?? []}
+        participants={mergedParticipants}
         language={language}
-        onLanguageChange={setLanguage}
+        onLanguageChange={handleLanguageChange}
         onRun={runCode}
         running={running}
-        readOnly={readOnly}
+        readOnly={readOnlyCombined}
+        connectionStatus={connectionStatus}
       />
 
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />
@@ -416,8 +454,19 @@ export function SessionPage({
           <EditorPanel
             ref={codeEditorRef}
             language={language}
-            readOnly={readOnly}
+            readOnly={readOnlyCombined}
             initialContent={session.content}
+            content={ctx.content}
+            collaboration={{
+              docVersion: ctx.version,
+              remoteEpoch: ctx.remoteEpoch,
+              sendTextChange: ctx.sendTextChange,
+              bumpLocalVersion: ctx.bumpLocalVersion,
+              setLocalContent: ctx.setLocalContent,
+              sendCursorMove: ctx.sendCursorMove,
+              isApplyingRemoteEdit: ctx.isApplyingRemoteEdit,
+              hasReceivedFullSync: ctx.hasReceivedFullSync,
+            }}
           />
         )}
         {mobileTab === "terminal" && (
@@ -430,10 +479,10 @@ export function SessionPage({
         {mobileTab === "chat" && (
           <ChatPanel
             messages={allMessages}
-            participants={participants ?? []}
+            participants={mergedParticipants}
             currentUserId={userId ?? ""}
             onSend={handleSendMessage}
-            disabled={readOnly}
+            disabled={readOnlyCombined}
           />
         )}
       </div>
@@ -459,8 +508,19 @@ export function SessionPage({
             <EditorPanel
               ref={codeEditorRef}
               language={language}
-              readOnly={readOnly}
+              readOnly={readOnlyCombined}
               initialContent={session.content}
+              content={ctx.content}
+              collaboration={{
+                docVersion: ctx.version,
+                remoteEpoch: ctx.remoteEpoch,
+                sendTextChange: ctx.sendTextChange,
+                bumpLocalVersion: ctx.bumpLocalVersion,
+                setLocalContent: ctx.setLocalContent,
+                sendCursorMove: ctx.sendCursorMove,
+                isApplyingRemoteEdit: ctx.isApplyingRemoteEdit,
+                hasReceivedFullSync: ctx.hasReceivedFullSync,
+              }}
             />
           </div>
 
@@ -499,10 +559,10 @@ export function SessionPage({
           ) : (
             <ChatPanel
               messages={allMessages}
-              participants={participants ?? []}
+              participants={mergedParticipants}
               currentUserId={userId ?? ""}
               onSend={handleSendMessage}
-              disabled={readOnly}
+              disabled={readOnlyCombined}
             />
           )}
         </div>

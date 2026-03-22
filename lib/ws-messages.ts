@@ -1,0 +1,194 @@
+/** Mirrors Rust `ws::messages` JSON (snake_case fields from serde). */
+
+export type SessionLanguageWire =
+  | "typescript"
+  | "javascript"
+  | "python"
+  | "go"
+  | "rust"
+  | "cpp"
+  | "c"
+  | "csharp"
+  | "java"
+  | "kotlin"
+  | "swift"
+  | "ruby"
+  | "php"
+  | "dart"
+  | "scala"
+  | "elixir"
+  | "erlang"
+  | "racket";
+
+export interface EditorRange {
+  start_line: number;
+  start_column: number;
+  end_line: number;
+  end_column: number;
+}
+
+export interface TextChangeDelta {
+  range: EditorRange;
+  text: string;
+  version: number;
+}
+
+export interface ClientMessageTextChange {
+  type: "text_change";
+  range: EditorRange;
+  text: string;
+  version: number;
+}
+
+export interface ClientMessageCursorMove {
+  type: "cursor_move";
+  line: number;
+  column: number;
+}
+
+export interface ClientMessageChat {
+  type: "chat_message";
+  content: string;
+}
+
+export interface ClientMessageLanguage {
+  type: "language_change";
+  language: SessionLanguageWire;
+}
+
+export interface ClientMessageLeave {
+  type: "leave";
+}
+
+export type ClientMessage =
+  | ClientMessageTextChange
+  | ClientMessageCursorMove
+  | ClientMessageChat
+  | ClientMessageLanguage
+  | ClientMessageLeave;
+
+export interface ParticipantInfo {
+  user_id: string;
+  display_name: string;
+  color: string;
+}
+
+export interface ChatMessagePayload {
+  id: string;
+  content: string;
+  user_id: string;
+  display_name: string;
+  color: string;
+  created_at: string;
+}
+
+export interface FullSyncPayload {
+  content: string;
+  version: number;
+  language: SessionLanguageWire;
+  participants: ParticipantInfo[];
+  messages: ChatMessagePayload[];
+  is_owner: boolean;
+}
+
+export interface TextChangePayload {
+  delta: TextChangeDelta;
+  version: number;
+  user_id: string;
+  display_name: string;
+}
+
+export interface CursorPayload {
+  line: number;
+  column: number;
+  user_id: string;
+  display_name: string;
+  color: string;
+}
+
+export interface LanguageChangePayload {
+  language: SessionLanguageWire;
+  user_id: string;
+  display_name: string;
+}
+
+export interface ParticipantPayload {
+  user_id: string;
+  display_name: string;
+  color: string;
+}
+
+export interface ParticipantLeavePayload {
+  user_id: string;
+  display_name: string;
+}
+
+export type SessionEndReason =
+  | "host_ended"
+  | "idle_timeout"
+  | "event_cap_reached";
+
+export interface SessionEndedPayload {
+  reason: SessionEndReason;
+}
+
+export interface WsErrorPayload {
+  code: string;
+  message: string;
+}
+
+export type ServerMessage =
+  | {
+      type: "full_sync";
+      content: string;
+      version: number;
+      language: SessionLanguageWire;
+      participants: ParticipantInfo[];
+      messages: ChatMessagePayload[];
+      is_owner: boolean;
+    }
+  | {
+      type: "text_change";
+      delta: TextChangeDelta;
+      version: number;
+      user_id: string;
+      display_name: string;
+    }
+  | {
+      type: "cursor_move";
+      line: number;
+      column: number;
+      user_id: string;
+      display_name: string;
+      color: string;
+    }
+  | {
+      type: "chat_message";
+      id: string;
+      content: string;
+      user_id: string;
+      display_name: string;
+      color: string;
+      created_at: string;
+    }
+  | {
+      type: "language_change";
+      language: SessionLanguageWire;
+      user_id: string;
+      display_name: string;
+    }
+  | { type: "participant_join"; user_id: string; display_name: string; color: string }
+  | { type: "participant_leave"; user_id: string; display_name: string }
+  | { type: "session_ended"; reason: SessionEndReason }
+  | { type: "error"; code: string; message: string };
+
+export function parseServerMessage(raw: string): ServerMessage | null {
+  try {
+    const v = JSON.parse(raw) as Record<string, unknown>;
+    const t = v.type as string;
+    if (typeof t !== "string") return null;
+    return v as ServerMessage;
+  } catch {
+    return null;
+  }
+}

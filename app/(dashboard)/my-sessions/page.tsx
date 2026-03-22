@@ -55,7 +55,10 @@ export default function MySessionsPage() {
   const requireAuth = useRequireAuth();
   const { setMobileOpen } = useSidebar();
 
-  const sessions = sessionsData?.data ?? [];
+  const sessions = useMemo(
+    () => sessionsData?.data ?? [],
+    [sessionsData?.data],
+  );
 
   const [filter, setFilter] = useState<FilterValue>("all");
   const [search, setSearch] = useState("");

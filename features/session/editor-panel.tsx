@@ -2,6 +2,8 @@
 
 import { useRef, useImperativeHandle, forwardRef, useEffect } from "react";
 import Editor, { type OnMount } from "@monaco-editor/react";
+import { debounce } from "@/lib/utils";
+import type { EditorRange } from "@/lib/ws-messages";
 import { LANGUAGES } from "./language-selector";
 
 type MonacoEditor = Parameters<OnMount>[0];
@@ -379,10 +381,32 @@ two_sum([Num | Rest], Target, Seen) ->
 (displayln (two-sum '(3 2 4) 6))`,
 };
 
+export type EditorCollaboration = {
+  docVersion: number;
+  remoteEpoch: number;
+  sendTextChange: (range: EditorRange, text: string, version: number) => void;
+  bumpLocalVersion: () => void;
+  setLocalContent: (content: string) => void;
+  sendCursorMove?: (line: number, column: number) => void;
+  isApplyingRemoteEdit: React.MutableRefObject<boolean>;
+  /** First full_sync: false → setValue then true; later full_sync (reconnect): executeEdits */
+  hasReceivedFullSync: React.MutableRefObject<boolean>;
+};
+
 export const EditorPanel = forwardRef<
   EditorPanelHandle,
-  { language: string; readOnly?: boolean; initialContent?: string }
->(function EditorPanel({ language, readOnly = false, initialContent }, ref) {
+  {
+    language: string;
+    readOnly?: boolean;
+    initialContent?: string;
+    /** Live sync — controlled document */
+    content?: string;
+    collaboration?: EditorCollaboration;
+  }
+>(function EditorPanel(
+  { language, readOnly = false, initialContent, content, collaboration },
+  ref,
+) {
   const editorRef = useRef<MonacoEditor | null>(null);
   const suggestPrefSubRef = useRef<{ dispose: () => void } | null>(null);
 
@@ -399,6 +423,26 @@ export const EditorPanel = forwardRef<
       ? initialContent
       : (DEFAULT_CODE[language] ?? DEFAULT_CODE.typescript);
 
+  const cursorSendRef = useRef(collaboration?.sendCursorMove);
+  useEffect(() => {
+    cursorSendRef.current = collaboration?.sendCursorMove;
+  }, [collaboration?.sendCursorMove]);
+
+  const sendCursorDebounced = useRef(
+    debounce((line: number, column: number) => {
+      cursorSendRef.current?.(line, column);
+    }, 50),
+  );
+
+  const docVersionRef = useRef(collaboration?.docVersion ?? 0);
+  useEffect(() => {
+    if (collaboration) docVersionRef.current = collaboration.docVersion;
+    // Only `docVersion` should re-sync the ref (context value is a new object each render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- collaboration?.docVersion
+  }, [collaboration?.docVersion]);
+
+  const prevRemoteEpochRef = useRef(collaboration?.remoteEpoch ?? 0);
+
   useEffect(() => {
     return () => {
       suggestPrefSubRef.current?.dispose();
@@ -409,6 +453,29 @@ export const EditorPanel = forwardRef<
   const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
     editor.focus();
+
+    if (collaboration) {
+      const { sendTextChange, bumpLocalVersion, setLocalContent, isApplyingRemoteEdit } =
+        collaboration;
+      editor.onDidChangeModelContent((e) => {
+        if (isApplyingRemoteEdit.current) return;
+        const ch = e.changes[0];
+        if (!ch) return;
+        const range: EditorRange = {
+          start_line: ch.range.startLineNumber,
+          start_column: ch.range.startColumn,
+          end_line: ch.range.endLineNumber,
+          end_column: ch.range.endColumn,
+        };
+        sendTextChange(range, ch.text, docVersionRef.current);
+        bumpLocalVersion();
+        docVersionRef.current += 1;
+        setLocalContent(editor.getValue());
+      });
+      editor.onDidChangeCursorPosition((ev) => {
+        sendCursorDebounced.current(ev.position.lineNumber, ev.position.column);
+      });
+    }
 
     const applySuggestWidgetPreference = () => {
       const pos = editor.getPosition();
@@ -430,6 +497,51 @@ export const EditorPanel = forwardRef<
     );
     applySuggestWidgetPreference();
   };
+
+  useEffect(() => {
+    if (content === undefined || !editorRef.current || !collaboration) return;
+    const ed = editorRef.current;
+    const isApplyingRemoteEdit = collaboration.isApplyingRemoteEdit;
+    const fullSyncRef = collaboration.hasReceivedFullSync;
+    const { remoteEpoch } = collaboration;
+
+    const remoteEpochAdvanced =
+      prevRemoteEpochRef.current !== remoteEpoch;
+    prevRemoteEpochRef.current = remoteEpoch;
+    const isReconnectFullSync =
+      remoteEpochAdvanced && fullSyncRef.current;
+
+    if (ed.getValue() === content) {
+      if (remoteEpochAdvanced && !fullSyncRef.current) {
+        fullSyncRef.current = true;
+      }
+      return;
+    }
+
+    isApplyingRemoteEdit.current = true;
+    try {
+      if (isReconnectFullSync) {
+        const model = ed.getModel();
+        if (model) {
+          const fullRange = model.getFullModelRange();
+          ed.executeEdits("remote-full-sync", [
+            { range: fullRange, text: content, forceMoveMarkers: true },
+          ]);
+        } else {
+          ed.setValue(content);
+        }
+      } else if (!fullSyncRef.current) {
+        ed.setValue(content);
+        fullSyncRef.current = true;
+      } else {
+        ed.setValue(content);
+      }
+    } finally {
+      queueMicrotask(() => {
+        isApplyingRemoteEdit.current = false;
+      });
+    }
+  }, [content, collaboration]);
 
   return (
     <div className="size-full overflow-hidden rounded-lg bg-[#1E1E1E]">

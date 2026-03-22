@@ -8,6 +8,7 @@ import { useUserPersistHydrated } from "@/hooks/use-user-persist-hydrated";
 import { useUserStore } from "@/stores/user-store";
 import { ApiError } from "@/lib/api-client";
 import { SessionPage } from "@/features/session/session-page";
+import { SessionProvider } from "@/contexts/session-context";
 import { SessionRouteLoading } from "@/features/session/session-route-loading";
 import { SessionRouteNotFound } from "@/features/session/session-route-not-found";
 import { SessionRouteError } from "@/features/session/session-route-error";
@@ -48,6 +49,7 @@ export default function SessionRoute({
   } = useSession(sessionId);
 
   const hasJoinedRef = useRef(false);
+  const prevSessionIdForJoinResetRef = useRef<string | null>(null);
   const hasShownEndedToastRef = useRef(false);
   const [joinErrorEntry, setJoinErrorEntry] = useState<{
     sid: string;
@@ -80,17 +82,30 @@ export default function SessionRoute({
 
   // Step 5 — Join session (only after session data is available and checks pass)
   useEffect(() => {
-    if (!userId || !session || hasJoinedRef.current) return;
-    if (!shouldJoin(session)) return;
+    if (!userId || !session) return;
 
+    if (session.status === "ended") {
+      return;
+    }
+
+    if (!shouldJoin(session)) {
+      return;
+    }
+
+    if (hasJoinedRef.current) return;
     hasJoinedRef.current = true;
 
     joinSession.mutateAsync(sessionId).catch((err) => {
+      hasJoinedRef.current = false;
       if (err instanceof ApiError) {
         setJoinErrorEntry({ sid: sessionId, error: err });
       }
     });
   }, [userId, session, sessionId, joinSession]);
+
+  const joinReady =
+    session?.status === "ended" ||
+    (joinSession.isSuccess && joinSession.variables === sessionId);
 
   // Show toast once when an ended session is detected
   useEffect(() => {
@@ -107,11 +122,19 @@ export default function SessionRoute({
     }
   }, [joinError]);
 
-  // Reset join guard when sessionId changes (navigating between sessions)
+  // Reset join guard when sessionId changes (navigating between sessions).
+  // Skip the initial mount so we don't clear an in-flight join before it completes.
   useEffect(() => {
+    if (prevSessionIdForJoinResetRef.current === null) {
+      prevSessionIdForJoinResetRef.current = sessionId;
+      return;
+    }
+    if (prevSessionIdForJoinResetRef.current === sessionId) return;
+    prevSessionIdForJoinResetRef.current = sessionId;
     hasJoinedRef.current = false;
     hasShownEndedToastRef.current = false;
-  }, [sessionId]);
+    joinSession.reset();
+  }, [sessionId, joinSession]);
 
   // Wait until persist + user id before session query (and avoid identity flash)
   if (!authReady || isLoading) {
@@ -154,13 +177,22 @@ export default function SessionRoute({
     return <SessionRouteNotFound />;
   }
 
-  // Step 6 — Render with readOnly computed from visibility + ownership + status
-  // WebSocket not implemented yet — do NOT connect for any state
+  // Step 6 — WebSocket after REST join succeeds (active sessions only)
+  const wsEnabled =
+    joinReady && session.status === "active" && !!userId;
+
   return (
-    <SessionPage
+    <SessionProvider
       session={session}
       sessionId={sessionId}
-      readOnly={computeReadOnly(session)}
-    />
+      userId={userId!}
+      enabled={wsEnabled}
+    >
+      <SessionPage
+        session={session}
+        sessionId={sessionId}
+        readOnly={computeReadOnly(session)}
+      />
+    </SessionProvider>
   );
 }

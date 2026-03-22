@@ -16,9 +16,11 @@ export function useUserPersistHydrated() {
   );
 
   useEffect(() => {
-    if (useUserStore.persist.hasHydrated()) {
-      setHydrated(true);
-    }
+    queueMicrotask(() => {
+      if (useUserStore.persist.hasHydrated()) {
+        setHydrated(true);
+      }
+    });
     const unsub = useUserStore.persist.onFinishHydration(() => {
       setHydrated(true);
     });
