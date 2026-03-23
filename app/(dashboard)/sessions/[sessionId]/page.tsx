@@ -49,8 +49,19 @@ export default function SessionRoute({
   } = useSession(sessionId);
 
   const hasJoinedRef = useRef(false);
+  /** Mirrors route `sessionId` for async join callbacks (TanStack mutation `variables` can lag the URL). */
+  const sessionIdRef = useRef(sessionId);
+  sessionIdRef.current = sessionId;
+
   const prevSessionIdForJoinResetRef = useRef<string | null>(null);
   const hasShownEndedToastRef = useRef(false);
+  /**
+   * Which sessionId we've successfully POST /join'd for this visit.
+   * Do not use `joinSession.isSuccess && joinSession.variables` for gating WS: the global
+   * mutation state can disagree with the URL for a render (cache + reset ordering), causing
+   * stuck "Connecting" when navigating back to a session.
+   */
+  const [joinedSessionId, setJoinedSessionId] = useState<string | null>(null);
   const [joinErrorEntry, setJoinErrorEntry] = useState<{
     sid: string;
     error: ApiError;
@@ -80,7 +91,23 @@ export default function SessionRoute({
     };
   }, [hydrated, authReady, requireAuth]);
 
-  // Step 5 — Join session (only after session data is available and checks pass)
+  // Reset join guard when sessionId changes. MUST run before the join effect below:
+  // otherwise the join effect sees hasJoinedRef still true from the previous session
+  // and skips calling joinSession for the new route (joinReady / ws stay false forever).
+  useEffect(() => {
+    if (prevSessionIdForJoinResetRef.current === null) {
+      prevSessionIdForJoinResetRef.current = sessionId;
+      return;
+    }
+    if (prevSessionIdForJoinResetRef.current === sessionId) return;
+    prevSessionIdForJoinResetRef.current = sessionId;
+    hasJoinedRef.current = false;
+    hasShownEndedToastRef.current = false;
+    setJoinedSessionId(null);
+    joinSession.reset();
+  }, [sessionId, joinSession]);
+
+  // Join session (only after session data is available and checks pass)
   useEffect(() => {
     if (!userId || !session) return;
 
@@ -95,17 +122,24 @@ export default function SessionRoute({
     if (hasJoinedRef.current) return;
     hasJoinedRef.current = true;
 
-    joinSession.mutateAsync(sessionId).catch((err) => {
-      hasJoinedRef.current = false;
-      if (err instanceof ApiError) {
-        setJoinErrorEntry({ sid: sessionId, error: err });
-      }
-    });
+    const targetId = sessionId;
+    joinSession
+      .mutateAsync(targetId)
+      .then(() => {
+        if (sessionIdRef.current === targetId) {
+          setJoinedSessionId(targetId);
+        }
+      })
+      .catch((err) => {
+        hasJoinedRef.current = false;
+        if (err instanceof ApiError) {
+          setJoinErrorEntry({ sid: targetId, error: err });
+        }
+      });
   }, [userId, session, sessionId, joinSession]);
 
   const joinReady =
-    session?.status === "ended" ||
-    (joinSession.isSuccess && joinSession.variables === sessionId);
+    session?.status === "ended" || joinedSessionId === sessionId;
 
   // Show toast once when an ended session is detected
   useEffect(() => {
@@ -121,20 +155,6 @@ export default function SessionRoute({
       toast.info("This session has ended");
     }
   }, [joinError]);
-
-  // Reset join guard when sessionId changes (navigating between sessions).
-  // Skip the initial mount so we don't clear an in-flight join before it completes.
-  useEffect(() => {
-    if (prevSessionIdForJoinResetRef.current === null) {
-      prevSessionIdForJoinResetRef.current = sessionId;
-      return;
-    }
-    if (prevSessionIdForJoinResetRef.current === sessionId) return;
-    prevSessionIdForJoinResetRef.current = sessionId;
-    hasJoinedRef.current = false;
-    hasShownEndedToastRef.current = false;
-    joinSession.reset();
-  }, [sessionId, joinSession]);
 
   // Wait until persist + user id before session query (and avoid identity flash)
   if (!authReady || isLoading) {

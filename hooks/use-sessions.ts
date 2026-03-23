@@ -135,6 +135,7 @@ export function useJoinSession() {
     mutationFn: (sessionId: string) => api.sessions.join(sessionId),
     onSuccess: (_, sessionId) => {
       queryClient.invalidateQueries({ queryKey: ["participants", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
   });
 }

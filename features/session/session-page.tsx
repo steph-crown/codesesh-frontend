@@ -211,16 +211,18 @@ export function SessionPage({
   const mergedMessages =
     ctx.messages.length > 0 ? ctx.messages : apiMessages;
 
+  // `idle` = WS not started (e.g. REST join not finished); not the same as reconnecting.
   const connectionStatus: ConnectionStatus =
     session.status === "ended"
-      ? "connected"
+      ? "ended"
       : ctx.connectionState === "connected"
         ? "connected"
-        : ctx.connectionState === "reconnecting" ||
-            ctx.connectionState === "connecting" ||
-            ctx.connectionState === "idle"
+        : ctx.connectionState === "reconnecting"
           ? "reconnecting"
-          : "disconnected";
+          : ctx.connectionState === "connecting" ||
+              ctx.connectionState === "idle"
+            ? "connecting"
+            : "disconnected";
 
   const readOnlyCombined = readOnly || ctx.sessionEnded;
 
