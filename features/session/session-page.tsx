@@ -10,7 +10,7 @@ import {
 import type { SessionDetail, ChatMessage } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CommandLineIcon } from "@hugeicons/core-free-icons";
+import { CommandLineIcon, LockIcon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { useParticipants, useMessages } from "@/hooks/use-sessions";
 import { useUserStore } from "@/stores/user-store";
@@ -21,6 +21,7 @@ import { SessionToolbar } from "./session-toolbar";
 import { EditorPanel, type EditorPanelHandle } from "./editor-panel";
 import { TerminalPanel, type TerminalLine } from "./terminal-panel";
 import { ChatPanel } from "./chat-panel";
+import { NotesPanel } from "./notes-panel";
 import { LANGUAGES } from "./language-selector";
 
 type MobileTab = "editor" | "terminal" | "chat";
@@ -28,8 +29,11 @@ type MobileTab = "editor" | "terminal" | "chat";
 const H_KEY = "codesesh_h_split";
 const V_KEY = "codesesh_v_split";
 const V_COLLAPSED_KEY = "codesesh_v_collapsed";
+const N_KEY = "codesesh_notes_split";
+const N_COLLAPSED_KEY = "codesesh_notes_collapsed";
 const DEFAULT_H = 70;
 const DEFAULT_V = 70;
+const DEFAULT_N = 72;
 const TERMINAL_SNAP_PX = 100;
 const CHAT_COLLAPSED_THRESHOLD = 18;
 
@@ -73,7 +77,7 @@ function HorizontalCollapsedTab({
   onClick,
 }: {
   label: string;
-  icon: typeof CommandLineIcon;
+  icon: typeof CommandLineIcon | typeof LockIcon;
   onClick: () => void;
 }) {
   return (
@@ -257,6 +261,14 @@ export function SessionPage({
   const containerRef = useRef<HTMLDivElement>(null);
   const leftColRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const rightColRef = useRef<HTMLDivElement>(null);
+  const chatWrapRef = useRef<HTMLDivElement>(null);
+  const nRef = useRef(isClient() ? storageNum(N_KEY, DEFAULT_N) : DEFAULT_N);
+  const [notesCollapsed, setNotesCollapsed] = useState(() =>
+    isClient() ? storageBool(N_COLLAPSED_KEY, true) : true,
+  );
+  const notesCollapsedRef = useRef(notesCollapsed);
+  notesCollapsedRef.current = notesCollapsed;
 
   useLayoutEffect(() => {
     if (leftColRef.current) {
@@ -266,6 +278,12 @@ export function SessionPage({
       editorRef.current.style.height = `${vRef.current}%`;
     }
   }, []);
+
+  useLayoutEffect(() => {
+    if (!notesCollapsed && chatWrapRef.current) {
+      chatWrapRef.current.style.height = `${nRef.current}%`;
+    }
+  }, [notesCollapsed]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -336,6 +354,41 @@ export function SessionPage({
   const vDragEndRef = useRef(() => {
     localStorage.setItem(V_KEY, String(vRef.current));
   });
+
+  const nDragRef = useRef((delta: number) => {
+    const rightCol = rightColRef.current;
+    const chatEl = chatWrapRef.current;
+    if (!rightCol || !chatEl || notesCollapsedRef.current) return;
+    const totalH = rightCol.offsetHeight;
+    const next = nRef.current + (delta / totalH) * 100;
+    const clamped = clamp(next, 28, 88);
+    nRef.current = clamped;
+    chatEl.style.height = `${clamped}%`;
+  });
+
+  const nDragEndRef = useRef(() => {
+    localStorage.setItem(N_KEY, String(nRef.current));
+  });
+
+  function expandNotes() {
+    notesCollapsedRef.current = false;
+    setNotesCollapsed(false);
+    localStorage.setItem(N_COLLAPSED_KEY, "false");
+    const restored = storageNum(N_KEY, DEFAULT_N);
+    nRef.current = restored;
+    requestAnimationFrame(() => {
+      if (chatWrapRef.current) chatWrapRef.current.style.height = `${restored}%`;
+    });
+  }
+
+  function collapseNotes() {
+    notesCollapsedRef.current = true;
+    setNotesCollapsed(true);
+    localStorage.setItem(N_COLLAPSED_KEY, "true");
+    if (chatWrapRef.current) {
+      chatWrapRef.current.style.height = "";
+    }
+  }
 
   function expandTerminal() {
     termCollapsedRef.current = false;
@@ -553,17 +606,49 @@ export function SessionPage({
           onDragEndRef={hDragEndRef}
         />
 
-        <div className="flex-1 overflow-hidden">
-          {chatCollapsed ? (
-            <CollapsedChatPanel />
-          ) : (
-            <ChatPanel
-              messages={allMessages}
-              participants={mergedParticipants}
-              currentUserId={userId ?? ""}
-              onSend={handleSendMessage}
-              disabled={readOnlyCombined}
+        <div
+          ref={rightColRef}
+          className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden"
+        >
+          <div
+            ref={chatWrapRef}
+            className={cn(
+              "min-h-0 overflow-hidden",
+              notesCollapsed && "flex-1",
+            )}
+            style={!notesCollapsed ? { height: `${nRef.current}%` } : undefined}
+          >
+            {chatCollapsed ? (
+              <CollapsedChatPanel />
+            ) : (
+              <ChatPanel
+                messages={allMessages}
+                participants={mergedParticipants}
+                currentUserId={userId ?? ""}
+                onSend={handleSendMessage}
+                disabled={readOnlyCombined}
+              />
+            )}
+          </div>
+
+          {!notesCollapsed && (
+            <DragHandle
+              direction="vertical"
+              onDragRef={nDragRef}
+              onDragEndRef={nDragEndRef}
             />
+          )}
+
+          {notesCollapsed ? (
+            <HorizontalCollapsedTab
+              label="Notes"
+              icon={LockIcon}
+              onClick={expandNotes}
+            />
+          ) : (
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <NotesPanel sessionId={sessionId} onCollapse={collapseNotes} />
+            </div>
           )}
         </div>
       </div>

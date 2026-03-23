@@ -155,3 +155,95 @@
 .monaco-editor .monaco-hover {
   z-index: 90 !important;
 }
+
+/* Session notes — TipTap / Notion-like dark prose */
+.notes-tiptap-content .tiptap {
+  outline: none;
+}
+
+.notes-tiptap-content .tiptap p {
+  margin: 0.35em 0;
+}
+
+.notes-tiptap-content .tiptap h1 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0.75em 0 0.35em;
+  color: #f9fafb;
+}
+
+.notes-tiptap-content .tiptap h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0.65em 0 0.3em;
+  color: #f3f4f6;
+}
+
+.notes-tiptap-content .tiptap h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.5em 0 0.25em;
+  color: #e5e7eb;
+}
+
+.notes-tiptap-content .tiptap ul,
+.notes-tiptap-content .tiptap ol {
+  margin: 0.35em 0;
+  padding-left: 1.25rem;
+}
+
+.notes-tiptap-content .tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.notes-tiptap-content .tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.notes-tiptap-content .tiptap ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.notes-tiptap-content .tiptap blockquote {
+  margin: 0.5em 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid rgba(255 255 255 / 15%);
+  color: #9ca3af;
+}
+
+.notes-tiptap-content .tiptap pre {
+  margin: 0.5em 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.375rem;
+  background: #161b22;
+  border: 1px solid rgba(255 255 255 / 8%);
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.notes-tiptap-content .tiptap code {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+  background: rgba(255 255 255 / 8%);
+  color: #e5e7eb;
+}
+
+.notes-tiptap-content .tiptap pre code {
+  padding: 0;
+  background: transparent;
+  font-size: inherit;
+}
+
+.notes-tiptap-content .tiptap hr {
+  margin: 0.75em 0;
+  border: none;
+  border-top: 1px solid rgba(255 255 255 / 10%);
+}

@@ -71,3 +71,16 @@ export interface GetMessagesQuery {
   limit?: number;
   before?: string;
 }
+
+/** Private session notes (REST). `id` / `updated_at` null until first successful save. */
+export interface SessionNoteResponse {
+  id: string | null;
+  session_id: string;
+  user_id: string;
+  content: string;
+  updated_at: string | null;
+}
+
+export interface UpsertSessionNoteBody {
+  content: string;
+}

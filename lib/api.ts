@@ -9,6 +9,8 @@ import type {
   SessionVisibility,
   GetSessionsQuery,
   GetMessagesQuery,
+  SessionNoteResponse,
+  UpsertSessionNoteBody,
 } from "./api-types";
 
 function toQueryString(params: Record<string, string | number | boolean | undefined>) {
@@ -84,5 +86,14 @@ export const api = {
           before: query?.before,
         })}`,
       ),
+
+    getNote: (sessionId: string) =>
+      apiFetch<SessionNoteResponse>(`/sessions/${sessionId}/notes`),
+
+    upsertNote: (sessionId: string, body: UpsertSessionNoteBody) =>
+      apiFetch<SessionNoteResponse>(`/sessions/${sessionId}/notes`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
   },
 };
