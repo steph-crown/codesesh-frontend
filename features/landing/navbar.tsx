@@ -27,7 +27,7 @@ export function Navbar() {
           My Sessions
         </Link>
         <a
-          href="https://github.com"
+          href="https://github.com/steph-crown/codesesh-api"
           target="_blank"
           rel="noopener noreferrer"
           className={cn(

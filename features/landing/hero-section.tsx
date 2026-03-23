@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -10,58 +11,112 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { createSession, saveUser } from "@/lib/sessions";
+import { toast } from "sonner";
+import { useCreateSession } from "@/hooks/use-sessions";
+import { useUserStore } from "@/stores/user-store";
+import { api } from "@/lib/api";
+import { PALETTE } from "@/lib/colors";
+import { generateSessionName } from "@/lib/session-names";
+import { extractSessionCode } from "@/lib/join-code";
+
+function randomColorName() {
+  return PALETTE[Math.floor(Math.random() * PALETTE.length)].name;
+}
 
 export function HeroSection() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [joinOpen, setJoinOpen] = useState(false);
-  const [sessionId, setSessionId] = useState("");
+  const userId = useUserStore((s) => s.userId);
+  const setUser = useUserStore((s) => s.setUser);
+  const createSession = useCreateSession();
 
-  function handleCreate() {
-    const name = username.trim();
-    if (!name) return;
-    const session = createSession(name);
-    saveUser({ username: name });
-    router.push(`/sessions/${session.id}`);
+  const [displayName, setDisplayName] = useState("");
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const [joinInput, setJoinInput] = useState("");
+
+  async function handleCreate() {
+    if (!userId) {
+      const trimmed = displayName.trim();
+      if (!trimmed) {
+        toast.error("Please enter your name to continue.");
+        return;
+      }
+
+      setCreatingUser(true);
+      try {
+        const user = await api.users.create(trimmed, randomColorName());
+        setUser(user.id, user.display_name, user.color);
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to create user",
+        );
+        setCreatingUser(false);
+        return;
+      }
+      setCreatingUser(false);
+    }
+
+    createSession.mutate(
+      { name: generateSessionName(), language: "typescript" },
+      {
+        onSuccess: (session) => {
+          setDisplayName("");
+          router.push(`/sessions/${session.short_id}`);
+        },
+      },
+    );
   }
 
   function handleJoin() {
-    const sid = sessionId.trim();
-    if (!sid) return;
-    router.push(`/sessions/${sid}`);
+    const raw = joinInput.trim();
+    if (!raw) return;
+    const code = extractSessionCode(raw);
+    if (!code) {
+      toast.error("Invalid session code or link.");
+      return;
+    }
+    setJoinOpen(false);
+    setJoinInput("");
+    router.push(`/sessions/${code}`);
   }
+
+  const isPending = creatingUser || createSession.isPending;
 
   return (
     <>
-      <section className="relative min-h-svh md:min-h-0 md:flex-1 flex flex-col items-center justify-center bg-[#FBF6F2] px-5 md:px-6 pt-[72px] text-center">
-        <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-6">
+      <section className="relative flex min-h-svh flex-col items-center justify-center bg-[#FBF6F2] px-5 pt-[72px] text-center md:min-h-0 md:flex-1 md:px-6">
+        <span className="mb-6 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
           Real-time pair programming
         </span>
-        <h1 className="text-4xl sm:text-5xl md:text-[56px] font-bold leading-[1.1] tracking-tight text-[#0A0A0A] max-w-[800px]">
+        <h1 className="max-w-[800px] text-4xl font-bold leading-[1.1] tracking-tight text-[#0A0A0A] sm:text-5xl md:text-[56px]">
           Code together, instantly.
         </h1>
-        <p className="mt-6 text-base text-[#4B5563] max-w-[560px] leading-relaxed">
+        <p className="mt-6 max-w-[560px] text-base leading-relaxed text-[#4B5563]">
           Create a live coding session and share the link. Your teammate joins
           in seconds&nbsp;&mdash; no signup, no setup.
         </p>
 
-        <div className="mt-10 flex flex-col items-center gap-4 w-full max-w-[400px]">
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="What should we call you?"
-            className="w-full h-12 rounded-full bg-white border border-[#DFDDD7] px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-[#9CA3AF]"
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
+        <div className="mt-10 flex w-full max-w-[400px] flex-col items-center gap-4">
+          {!userId && (
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="What should we call you?"
+              disabled={isPending}
+              className="w-full h-12 rounded-full bg-white border border-[#DFDDD7] px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-[#9CA3AF]"
+              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            />
+          )}
           <div className="flex gap-3">
             <Button
               size="lg"
               onClick={handleCreate}
+              disabled={isPending}
               className="h-12 px-7 text-[15px]"
             >
-              Create Session
+              {isPending && <Spinner />}
+              {isPending ? "Creating..." : "Create Session"}
             </Button>
             <Button
               variant="outline"
@@ -75,24 +130,29 @@ export function HeroSection() {
         </div>
       </section>
 
+      {/* Join session dialog */}
       <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl">Join a session</DialogTitle>
             <DialogDescription>
-              Enter the session ID shared with you to join.
+              Enter the session code or link shared with you.
             </DialogDescription>
           </DialogHeader>
           <input
             type="text"
-            value={sessionId}
-            onChange={(e) => setSessionId(e.target.value)}
-            placeholder="e.g. xk7p2"
+            value={joinInput}
+            onChange={(e) => setJoinInput(e.target.value)}
+            placeholder="e.g. abc-def-ghj or paste link"
             autoFocus
-            className="w-full h-12 rounded-full bg-white border-[1.5px] border-primary px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
             onKeyDown={(e) => e.key === "Enter" && handleJoin()}
           />
-          <Button onClick={handleJoin} className="w-full h-12">
+          <Button
+            onClick={handleJoin}
+            disabled={!joinInput.trim()}
+            className="h-12 w-full"
+          >
             Join Session
           </Button>
         </DialogContent>

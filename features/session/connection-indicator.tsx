@@ -2,15 +2,23 @@
 
 import { cn } from "@/lib/utils";
 
-export type ConnectionStatus = "connected" | "reconnecting" | "disconnected";
+export type ConnectionStatus =
+  | "connected"
+  | "connecting"
+  | "reconnecting"
+  | "disconnected"
+  | "ended";
 
 const STATUS_CONFIG: Record<
   ConnectionStatus,
   { color: string; pulse: boolean; label: string }
 > = {
   connected: { color: "bg-[#16A34A]", pulse: false, label: "Connected" },
+  /** Join in progress or first WebSocket handshake — not a dropped connection. */
+  connecting: { color: "bg-[#FACC15]", pulse: true, label: "Connecting..." },
   reconnecting: { color: "bg-[#FACC15]", pulse: true, label: "Reconnecting..." },
   disconnected: { color: "bg-[#DC2626]", pulse: false, label: "Disconnected" },
+  ended: { color: "bg-[#DC2626]", pulse: false, label: "Ended" },
 };
 
 export function ConnectionIndicator({

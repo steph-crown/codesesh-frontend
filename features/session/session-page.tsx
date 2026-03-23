@@ -1,14 +1,28 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect } from "react";
-import type { Session, ChatMessage } from "@/lib/sessions";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useLayoutEffect,
+  useEffect,
+  useMemo,
+} from "react";
+import type { SessionDetail, ChatMessage, Participant } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CommandLineIcon } from "@hugeicons/core-free-icons";
+import { CommandLineIcon, LockIcon } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
+import { useParticipants, useMessages } from "@/hooks/use-sessions";
+import { useUserStore } from "@/stores/user-store";
+import { useSessionContext } from "@/contexts/session-context";
+import type { SessionLanguageWire } from "@/lib/ws-messages";
+import type { ConnectionStatus } from "./connection-indicator";
 import { SessionToolbar } from "./session-toolbar";
 import { EditorPanel, type EditorPanelHandle } from "./editor-panel";
 import { TerminalPanel, type TerminalLine } from "./terminal-panel";
 import { ChatPanel } from "./chat-panel";
+import { NotesPanel } from "./notes-panel";
 import { LANGUAGES } from "./language-selector";
 
 type MobileTab = "editor" | "terminal" | "chat";
@@ -16,8 +30,11 @@ type MobileTab = "editor" | "terminal" | "chat";
 const H_KEY = "codesesh_h_split";
 const V_KEY = "codesesh_v_split";
 const V_COLLAPSED_KEY = "codesesh_v_collapsed";
+const N_KEY = "codesesh_notes_split";
+const N_COLLAPSED_KEY = "codesesh_notes_collapsed";
 const DEFAULT_H = 70;
 const DEFAULT_V = 70;
+const DEFAULT_N = 72;
 const TERMINAL_SNAP_PX = 100;
 const CHAT_COLLAPSED_THRESHOLD = 18;
 
@@ -61,7 +78,7 @@ function HorizontalCollapsedTab({
   onClick,
 }: {
   label: string;
-  icon: typeof CommandLineIcon;
+  icon: typeof CommandLineIcon | typeof LockIcon;
   onClick: () => void;
 }) {
   return (
@@ -174,19 +191,98 @@ function DragHandle({
 
 export function SessionPage({
   session,
-  messages,
-  currentUser,
+  sessionId,
+  readOnly = false,
 }: {
-  session: Session;
-  messages: ChatMessage[];
-  currentUser: string;
+  session: SessionDetail;
+  sessionId: string;
+  readOnly?: boolean;
 }) {
-  const [language, setLanguage] = useState("typescript");
+  const userId = useUserStore((s) => s.userId);
+  const displayName = useUserStore((s) => s.displayName) ?? "Guest";
+  const userColor = useUserStore((s) => s.color) ?? "red";
+  const ctx = useSessionContext();
+  const { data: participants } = useParticipants(sessionId);
+  const { data: messagesData } = useMessages(sessionId);
+
+  const apiMessages: ChatMessage[] = messagesData?.messages ?? [];
+
+  const mergedParticipants =
+    ctx.participants.length > 0 ? ctx.participants : (participants ?? []);
+
+  /** Everyone who joined (REST), overlaid with live WS data when available — for toolbar avatars. */
+  const toolbarParticipants = useMemo(() => {
+    const api = participants ?? [];
+    const byId = new Map<string, Participant>();
+    for (const p of api) {
+      byId.set(p.user_id, p);
+    }
+    for (const p of ctx.participants) {
+      const prev = byId.get(p.user_id);
+      byId.set(
+        p.user_id,
+        prev
+          ? {
+              ...prev,
+              display_name: p.display_name,
+              color: p.color,
+              joined_at: p.joined_at ?? prev.joined_at,
+              is_active: p.is_active,
+            }
+          : p,
+      );
+    }
+    if (byId.size === 0 && ctx.participants.length > 0) {
+      for (const p of ctx.participants) {
+        byId.set(p.user_id, p);
+      }
+    }
+    return Array.from(byId.values());
+  }, [participants, ctx.participants]);
+
+  /** User IDs currently connected on the WebSocket (live presence). */
+  const presentUserIds = useMemo(() => {
+    if (ctx.connectionState !== "connected") return [];
+    return ctx.participants.map((p) => p.user_id);
+  }, [ctx.connectionState, ctx.participants]);
+
+  const mergedMessages =
+    ctx.messages.length > 0 ? ctx.messages : apiMessages;
+
+  // `idle` = WS not started (e.g. REST join not finished); not the same as reconnecting.
+  const connectionStatus: ConnectionStatus =
+    session.status === "ended"
+      ? "ended"
+      : ctx.connectionState === "connected"
+        ? "connected"
+        : ctx.connectionState === "reconnecting"
+          ? "reconnecting"
+          : ctx.connectionState === "connecting" ||
+              ctx.connectionState === "idle"
+            ? "connecting"
+            : "disconnected";
+
+  const readOnlyCombined = readOnly || ctx.sessionEnded;
+
+  const [language, setLanguage] = useState(session.language || "typescript");
+
+  useEffect(() => {
+    setLanguage(ctx.language);
+  }, [ctx.language]);
+
+  function handleLanguageChange(lang: string) {
+    setLanguage(lang);
+    if (ctx.connectionState === "connected") {
+      ctx.sendLanguageChange(lang as SessionLanguageWire);
+    }
+  }
   const [mobileTab, setMobileTab] = useState<MobileTab>("editor");
-  const [chatMessages, setChatMessages] = useState(messages);
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [terminalLines, setTerminalLines] = useState<TerminalLine[]>([]);
   const [running, setRunning] = useState(false);
   const codeEditorRef = useRef<EditorPanelHandle>(null);
+
+  const allMessages = [...mergedMessages, ...localMessages];
 
   const [terminalCollapsed, setTerminalCollapsed] = useState(() =>
     isClient() ? storageBool(V_COLLAPSED_KEY, false) : false,
@@ -205,6 +301,14 @@ export function SessionPage({
   const containerRef = useRef<HTMLDivElement>(null);
   const leftColRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const rightColRef = useRef<HTMLDivElement>(null);
+  const chatWrapRef = useRef<HTMLDivElement>(null);
+  const nRef = useRef(isClient() ? storageNum(N_KEY, DEFAULT_N) : DEFAULT_N);
+  const [notesCollapsed, setNotesCollapsed] = useState(() =>
+    isClient() ? storageBool(N_COLLAPSED_KEY, true) : true,
+  );
+  const notesCollapsedRef = useRef(notesCollapsed);
+  notesCollapsedRef.current = notesCollapsed;
 
   useLayoutEffect(() => {
     if (leftColRef.current) {
@@ -213,6 +317,25 @@ export function SessionPage({
     if (editorRef.current && !termCollapsedRef.current) {
       editorRef.current.style.height = `${vRef.current}%`;
     }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!notesCollapsed && chatWrapRef.current) {
+      chatWrapRef.current.style.height = `${nRef.current}%`;
+    }
+  }, [notesCollapsed]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        toast.success("Already saved", {
+          description: "Your code is saved automatically.",
+        });
+      }
+    }
+    globalThis.addEventListener("keydown", handleKeyDown);
+    return () => globalThis.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const hDragRef = useRef((delta: number) => {
@@ -272,6 +395,41 @@ export function SessionPage({
     localStorage.setItem(V_KEY, String(vRef.current));
   });
 
+  const nDragRef = useRef((delta: number) => {
+    const rightCol = rightColRef.current;
+    const chatEl = chatWrapRef.current;
+    if (!rightCol || !chatEl || notesCollapsedRef.current) return;
+    const totalH = rightCol.offsetHeight;
+    const next = nRef.current + (delta / totalH) * 100;
+    const clamped = clamp(next, 28, 88);
+    nRef.current = clamped;
+    chatEl.style.height = `${clamped}%`;
+  });
+
+  const nDragEndRef = useRef(() => {
+    localStorage.setItem(N_KEY, String(nRef.current));
+  });
+
+  function expandNotes() {
+    notesCollapsedRef.current = false;
+    setNotesCollapsed(false);
+    localStorage.setItem(N_COLLAPSED_KEY, "false");
+    const restored = storageNum(N_KEY, DEFAULT_N);
+    nRef.current = restored;
+    requestAnimationFrame(() => {
+      if (chatWrapRef.current) chatWrapRef.current.style.height = `${restored}%`;
+    });
+  }
+
+  function collapseNotes() {
+    notesCollapsedRef.current = true;
+    setNotesCollapsed(true);
+    localStorage.setItem(N_COLLAPSED_KEY, "true");
+    if (chatWrapRef.current) {
+      chatWrapRef.current.style.height = "";
+    }
+  }
+
   function expandTerminal() {
     termCollapsedRef.current = false;
     setTerminalCollapsed(false);
@@ -291,9 +449,7 @@ export function SessionPage({
       LANGUAGES.find((l) => l.id === language)?.label ?? language;
 
     setRunning(true);
-    setTerminalLines([
-      { type: "system", text: `$ Running ${langLabel}...` },
-    ]);
+    setTerminalLines([{ type: "system", text: `$ Running ${langLabel}...` }]);
 
     if (termCollapsedRef.current) {
       expandTerminal();
@@ -351,15 +507,49 @@ export function SessionPage({
     }
   }
 
-  function handleSendMessage(content: string, mentions: string[]) {
-    setChatMessages((prev) => [
+  const runCodeRef = useRef(runCode);
+  runCodeRef.current = runCode;
+
+  useEffect(() => {
+    if (readOnlyCombined) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey) || e.key !== "Enter") return;
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (t.closest(".monaco-editor")) {
+        // Run from code editor
+      } else if (t.closest("[data-codesesh-no-run-shortcut]")) {
+        return;
+      } else if (
+        t.tagName === "TEXTAREA" ||
+        t.tagName === "INPUT" ||
+        t.isContentEditable
+      ) {
+        return;
+      }
+      e.preventDefault();
+      void runCodeRef.current();
+    }
+    globalThis.window.addEventListener("keydown", onKeyDown, true);
+    return () =>
+      globalThis.window.removeEventListener("keydown", onKeyDown, true);
+  }, [readOnlyCombined]);
+
+  function handleSendMessage(content: string) {
+    if (ctx.connectionState === "connected") {
+      ctx.sendChatMessage(content);
+      return;
+    }
+    setLocalMessages((prev) => [
       ...prev,
       {
-        id: `msg-${Date.now()}`,
-        sender: currentUser,
+        id: `local-${Date.now()}`,
+        session_id: sessionId,
+        user_id: userId ?? "",
+        display_name: displayName,
+        color: userColor,
         content,
-        timestamp: Date.now(),
-        mentions: mentions.length > 0 ? mentions : undefined,
+        created_at: new Date().toISOString(),
       },
     ]);
   }
@@ -368,10 +558,15 @@ export function SessionPage({
     <div className="dark flex size-full flex-col bg-[#020617]">
       <SessionToolbar
         session={session}
+        participants={toolbarParticipants}
+        presentUserIds={presentUserIds}
         language={language}
-        onLanguageChange={setLanguage}
+        onLanguageChange={handleLanguageChange}
         onRun={runCode}
         running={running}
+        readOnly={readOnlyCombined}
+        connectionStatus={connectionStatus}
+        currentUserId={userId ?? ""}
       />
 
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />
@@ -379,7 +574,23 @@ export function SessionPage({
       {/* Mobile panels */}
       <div className="flex-1 overflow-hidden p-2 md:hidden">
         {mobileTab === "editor" && (
-          <EditorPanel ref={codeEditorRef} language={language} />
+          <EditorPanel
+            ref={codeEditorRef}
+            language={language}
+            readOnly={readOnlyCombined}
+            initialContent={session.content}
+            content={ctx.content}
+            collaboration={{
+              docVersion: ctx.version,
+              remoteEpoch: ctx.remoteEpoch,
+              sendTextChange: ctx.sendTextChange,
+              bumpLocalVersion: ctx.bumpLocalVersion,
+              setLocalContent: ctx.setLocalContent,
+              sendCursorMove: ctx.sendCursorMove,
+              isApplyingRemoteEdit: ctx.isApplyingRemoteEdit,
+              hasReceivedFullSync: ctx.hasReceivedFullSync,
+            }}
+          />
         )}
         {mobileTab === "terminal" && (
           <TerminalPanel
@@ -390,15 +601,16 @@ export function SessionPage({
         )}
         {mobileTab === "chat" && (
           <ChatPanel
-            messages={chatMessages}
-            contributors={session.contributors}
-            currentUser={currentUser}
+            messages={allMessages}
+            participants={mergedParticipants}
+            currentUserId={userId ?? ""}
             onSend={handleSendMessage}
+            disabled={readOnlyCombined}
           />
         )}
       </div>
 
-      {/* Desktop panels — positions applied via refs in useLayoutEffect */}
+      {/* Desktop panels */}
       <div
         ref={containerRef}
         className="hidden flex-1 gap-1 overflow-hidden p-2 md:flex"
@@ -416,7 +628,23 @@ export function SessionPage({
             )}
             style={terminalCollapsed ? undefined : { height: `${DEFAULT_V}%` }}
           >
-            <EditorPanel ref={codeEditorRef} language={language} />
+            <EditorPanel
+              ref={codeEditorRef}
+              language={language}
+              readOnly={readOnlyCombined}
+              initialContent={session.content}
+              content={ctx.content}
+              collaboration={{
+                docVersion: ctx.version,
+                remoteEpoch: ctx.remoteEpoch,
+                sendTextChange: ctx.sendTextChange,
+                bumpLocalVersion: ctx.bumpLocalVersion,
+                setLocalContent: ctx.setLocalContent,
+                sendCursorMove: ctx.sendCursorMove,
+                isApplyingRemoteEdit: ctx.isApplyingRemoteEdit,
+                hasReceivedFullSync: ctx.hasReceivedFullSync,
+              }}
+            />
           </div>
 
           <DragHandle
@@ -448,16 +676,49 @@ export function SessionPage({
           onDragEndRef={hDragEndRef}
         />
 
-        <div className="flex-1 overflow-hidden">
-          {chatCollapsed ? (
-            <CollapsedChatPanel />
-          ) : (
-            <ChatPanel
-              messages={chatMessages}
-              contributors={session.contributors}
-              currentUser={currentUser}
-              onSend={handleSendMessage}
+        <div
+          ref={rightColRef}
+          className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden"
+        >
+          <div
+            ref={chatWrapRef}
+            className={cn(
+              "min-h-0 overflow-hidden",
+              notesCollapsed && "flex-1",
+            )}
+            style={!notesCollapsed ? { height: `${nRef.current}%` } : undefined}
+          >
+            {chatCollapsed ? (
+              <CollapsedChatPanel />
+            ) : (
+              <ChatPanel
+                messages={allMessages}
+                participants={mergedParticipants}
+                currentUserId={userId ?? ""}
+                onSend={handleSendMessage}
+                disabled={readOnlyCombined}
+              />
+            )}
+          </div>
+
+          {!notesCollapsed && (
+            <DragHandle
+              direction="vertical"
+              onDragRef={nDragRef}
+              onDragEndRef={nDragEndRef}
             />
+          )}
+
+          {notesCollapsed ? (
+            <HorizontalCollapsedTab
+              label="Notes"
+              icon={LockIcon}
+              onClick={expandNotes}
+            />
+          ) : (
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <NotesPanel sessionId={sessionId} onCollapse={collapseNotes} />
+            </div>
           )}
         </div>
       </div>

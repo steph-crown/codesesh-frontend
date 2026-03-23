@@ -16,11 +16,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import type { SessionVisibility } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 
-type Privacy = "private" | "view" | "edit";
-
-const OPTIONS: { value: Privacy; icon: typeof LockIcon; label: string; desc: string }[] = [
+const OPTIONS: {
+  value: SessionVisibility;
+  icon: typeof LockIcon;
+  label: string;
+  desc: string;
+}[] = [
   {
     value: "private",
     icon: LockIcon,
@@ -28,7 +32,7 @@ const OPTIONS: { value: Privacy; icon: typeof LockIcon; label: string; desc: str
     desc: "Only people you invite can access",
   },
   {
-    value: "view",
+    value: "view_only",
     icon: ViewIcon,
     label: "Anyone with link can view",
     desc: "Others can see the code but not edit",
@@ -45,14 +49,16 @@ export function ShareDialog({
   open,
   onOpenChange,
   sessionId,
-  privacy,
-  onPrivacyChange,
+  visibility,
+  isOwner,
+  onVisibilityChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sessionId: string;
-  privacy: Privacy;
-  onPrivacyChange: (privacy: Privacy) => void;
+  visibility: SessionVisibility;
+  isOwner: boolean;
+  onVisibilityChange: (visibility: SessionVisibility) => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -69,7 +75,7 @@ export function ShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="dark bg-[#111827]! border-white/10! text-[#F9FAFB]!">
+      <DialogContent className="dark border-white/10! bg-[#111827]! text-[#F9FAFB]!">
         <DialogHeader>
           <DialogTitle className="text-lg text-[#F9FAFB]">
             Share session
@@ -83,12 +89,12 @@ export function ShareDialog({
           {OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              onClick={() => onPrivacyChange(opt.value)}
+              onClick={() => isOwner && onVisibilityChange(opt.value)}
+              disabled={!isOwner}
               className={cn(
                 "flex items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors",
-                privacy === opt.value
-                  ? "bg-white/10"
-                  : "hover:bg-white/5",
+                visibility === opt.value ? "bg-white/10" : "hover:bg-white/5",
+                !isOwner && "cursor-default opacity-60",
               )}
             >
               <HugeiconsIcon
@@ -97,21 +103,25 @@ export function ShareDialog({
                 strokeWidth={2}
                 className={cn(
                   "mt-0.5 shrink-0",
-                  privacy === opt.value ? "text-[#ff3c00]" : "text-[#9CA3AF]",
+                  visibility === opt.value
+                    ? "text-[#ff3c00]"
+                    : "text-[#9CA3AF]",
                 )}
               />
               <div className="min-w-0 flex-1">
                 <p
                   className={cn(
                     "text-sm font-medium",
-                    privacy === opt.value ? "text-[#F9FAFB]" : "text-[#9CA3AF]",
+                    visibility === opt.value
+                      ? "text-[#F9FAFB]"
+                      : "text-[#9CA3AF]",
                   )}
                 >
                   {opt.label}
                 </p>
                 <p className="mt-0.5 text-xs text-[#6B7280]">{opt.desc}</p>
               </div>
-              {privacy === opt.value && (
+              {visibility === opt.value && (
                 <HugeiconsIcon
                   icon={Tick02Icon}
                   size={16}
@@ -123,7 +133,7 @@ export function ShareDialog({
           ))}
         </div>
 
-        {privacy !== "private" && (
+        {visibility !== "private" && (
           <div className="flex items-center gap-2 rounded-lg bg-white/5 p-2">
             <input
               readOnly

@@ -3,14 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
   Login01Icon,
   Search01Icon,
+  Folder02Icon,
 } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   CommandDialog,
   CommandInput,
@@ -27,8 +29,18 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { useSessions, useUser } from "@/hooks/use-sessions";
+import {
+  useSessions,
+  useCreateSession,
+  useJoinSession,
+} from "@/hooks/use-sessions";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useUserStore } from "@/stores/user-store";
+import { getColorByName } from "@/lib/colors";
+import { generateSessionName } from "@/lib/session-names";
+import { extractSessionCode } from "@/lib/join-code";
 import { cn } from "@/lib/utils";
 
 function getInitials(name: string) {
@@ -42,33 +54,65 @@ function getInitials(name: string) {
 
 export function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar();
-  const { sessions } = useSessions();
-  const user = useUser();
+  const { data: sessionsData } = useSessions();
+  const userId = useUserStore((s) => s.userId);
+  const displayName = useUserStore((s) => s.displayName);
+  const userColor = useUserStore((s) => s.color);
+  const requireAuth = useRequireAuth();
+  const createSession = useCreateSession();
+  const joinSession = useJoinSession();
+
+  const sessions = sessionsData?.data ?? [];
 
   const [joinOpen, setJoinOpen] = useState(false);
-  const [joinId, setJoinId] = useState("");
+  const [joinInput, setJoinInput] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [newUsername, setNewUsername] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: searchData } = useSessions(
+    searchQuery.trim() ? { search: searchQuery.trim() } : undefined,
+  );
+  const searchResults = searchQuery.trim()
+    ? (searchData?.data ?? [])
+    : sessions;
 
-  function handleCreate() {
-    const name = newUsername.trim();
-    if (!name) return;
-    setCreateOpen(false);
-    setNewUsername("");
+  function handleNewSession() {
+    requireAuth(() => {
+      createSession.mutate(
+        { name: generateSessionName(), language: "typescript" },
+        {
+          onSuccess: (session) => {
+            router.push(`/sessions/${session.short_id}`);
+          },
+        },
+      );
+    });
   }
 
   function handleJoin() {
-    const sid = joinId.trim();
-    if (!sid) return;
-    setJoinOpen(false);
-    setJoinId("");
-    router.push(`/sessions/${sid}`);
+    const raw = joinInput.trim();
+    if (!raw) return;
+    const code = extractSessionCode(raw);
+    if (!code) {
+      toast.error("Invalid session code or link.");
+      return;
+    }
+    joinSession.mutate(code, {
+      onSuccess: () => {
+        setJoinOpen(false);
+        setJoinInput("");
+        router.push(`/sessions/${code}`);
+      },
+      onError: () => {
+        setJoinOpen(false);
+        setJoinInput("");
+        router.push(`/sessions/${code}`);
+      },
+    });
   }
 
   const recent = sessions.slice(0, 10);
-
   const showLabels = mobileOpen || !collapsed;
 
   const sidebarContent = (
@@ -76,12 +120,12 @@ export function Sidebar() {
       {/* Logo + collapse */}
       <div
         className={cn(
-          "flex items-center h-14 border-b border-[#E5E0DA] px-3",
+          "flex h-14 items-center border-b border-[#E5E0DA] px-3",
           showLabels ? "justify-between" : "justify-center",
         )}
       >
         {showLabels && (
-          <Link href="/my-sessions" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Image
               src="/logo-icon.svg"
               alt="CodeSesh"
@@ -98,7 +142,7 @@ export function Sidebar() {
               toggle();
             }
           }}
-          className="p-1.5 rounded-lg hover:bg-[#FAF5F0] transition-colors"
+          className="rounded-lg p-1.5 transition-colors hover:bg-[#FAF5F0]"
           aria-label={showLabels ? "Collapse sidebar" : "Expand sidebar"}
         >
           <Image
@@ -122,20 +166,25 @@ export function Sidebar() {
         )}
       >
         <button
-          onClick={() => setCreateOpen(true)}
+          onClick={handleNewSession}
+          disabled={createSession.isPending}
           className={cn(
-            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors w-full",
-            !showLabels && "justify-center w-10 px-0",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0] disabled:opacity-50",
+            !showLabels && "w-10 justify-center px-0",
           )}
         >
-          <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2} />
-          {showLabels && "New session"}
+          {createSession.isPending ? (
+            <Spinner className="size-[18px]" />
+          ) : (
+            <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2} />
+          )}
+          {showLabels && (createSession.isPending ? "Creating..." : "New session")}
         </button>
         <button
-          onClick={() => setJoinOpen(true)}
+          onClick={() => requireAuth(() => setJoinOpen(true))}
           className={cn(
-            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors w-full",
-            !showLabels && "justify-center w-10 px-0",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]",
+            !showLabels && "w-10 justify-center px-0",
           )}
         >
           <HugeiconsIcon icon={Login01Icon} size={18} strokeWidth={2} />
@@ -144,32 +193,54 @@ export function Sidebar() {
         <button
           onClick={() => setSearchOpen(true)}
           className={cn(
-            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors w-full",
-            !showLabels && "justify-center w-10 px-0",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]",
+            !showLabels && "w-10 justify-center px-0",
           )}
         >
           <HugeiconsIcon icon={Search01Icon} size={18} strokeWidth={2} />
           {showLabels && "Search"}
         </button>
+        <Link
+          href="/my-sessions"
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
+            pathname === "/my-sessions"
+              ? "bg-[#FAF5F0] text-[#0A0A0A]"
+              : "text-[#0A0A0A] hover:bg-[#FAF5F0]",
+            !showLabels && "w-10 justify-center px-0",
+          )}
+        >
+          <HugeiconsIcon icon={Folder02Icon} size={18} strokeWidth={2} />
+          {showLabels && "My Sessions"}
+        </Link>
       </div>
 
       {/* Recent sessions */}
       {showLabels && (
         <div className="flex-1 overflow-y-auto px-2 pt-2">
-          <p className="px-2.5 pb-2 text-[10px] font-medium text-[#9CA3AF] uppercase tracking-wider">
+          <p className="px-2.5 pb-2 text-[10px] font-medium uppercase tracking-wider text-[#9CA3AF]">
             Recent sessions
           </p>
           <div className="flex flex-col gap-0.5">
-            {recent.map((s) => (
-              <Link
-                key={s.id}
-                href={`/sessions/${s.id}`}
-                onClick={() => setMobileOpen(false)}
-                className="block truncate rounded-lg px-2.5 py-1.5 text-sm text-[#4B5563] hover:bg-[#FAF5F0] hover:text-[#0A0A0A] transition-colors"
-              >
-                {s.title}
-              </Link>
-            ))}
+            {recent.map((s) => {
+              const active = pathname === `/sessions/${s.short_id}`;
+              return (
+                <Link
+                  key={s.id}
+                  href={`/sessions/${s.short_id}`}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "block truncate rounded-lg px-2.5 py-1.5 text-sm transition-colors",
+                    active
+                      ? "bg-[#FAF5F0] font-medium text-[#0A0A0A]"
+                      : "text-[#4B5563] hover:bg-[#FAF5F0] hover:text-[#0A0A0A]",
+                  )}
+                >
+                  {s.name}
+                </Link>
+              );
+            })}
             {recent.length === 0 && (
               <p className="px-2.5 py-1.5 text-sm text-[#9CA3AF]">
                 No sessions yet
@@ -189,14 +260,16 @@ export function Sidebar() {
         )}
       >
         <Avatar size="sm">
-          <AvatarFallback>
-            {user ? getInitials(user.username) : "?"}
+          <AvatarFallback
+            color={userColor ? getColorByName(userColor) : undefined}
+          >
+            {displayName ? getInitials(displayName) : "?"}
           </AvatarFallback>
         </Avatar>
-        {showLabels && user && (
+        {showLabels && userId && (
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-[#0A0A0A]">
-              {user.username}
+              {displayName}
             </p>
             <p className="text-xs text-[#9CA3AF]">
               {sessions.length}{" "}
@@ -221,7 +294,7 @@ export function Sidebar() {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col w-full bg-white transition-transform duration-200 ease-in-out md:hidden",
+          "fixed inset-y-0 left-0 z-50 flex w-full flex-col bg-white transition-transform duration-200 ease-in-out md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -231,77 +304,75 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden md:flex flex-col h-svh bg-white border-r border-[#E5E0DA] transition-all duration-200 shrink-0",
+          "hidden h-svh shrink-0 flex-col border-r border-[#E5E0DA] bg-white transition-all duration-200 md:flex",
           collapsed ? "w-[60px]" : "w-[260px]",
         )}
       >
         {sidebarContent}
       </aside>
 
-      {/* Create session dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl">New session</DialogTitle>
-            <DialogDescription>
-              Enter your display name to create a new coding session.
-            </DialogDescription>
-          </DialogHeader>
-          <input
-            type="text"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-            placeholder="What should we call you?"
-            autoFocus
-            className="w-full h-12 rounded-full bg-white border-[1.5px] border-primary px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
-          <Button onClick={handleCreate} className="w-full h-12">
-            Create Session
-          </Button>
-        </DialogContent>
-      </Dialog>
-
       {/* Join session dialog */}
-      <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
+      <Dialog
+        open={joinOpen}
+        onOpenChange={(o) => {
+          if (!joinSession.isPending) setJoinOpen(o);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl">Join a session</DialogTitle>
             <DialogDescription>
-              Enter the session ID shared with you to join.
+              Enter the session code or link shared with you.
             </DialogDescription>
           </DialogHeader>
           <input
             type="text"
-            value={joinId}
-            onChange={(e) => setJoinId(e.target.value)}
-            placeholder="e.g. xk7p2"
+            value={joinInput}
+            onChange={(e) => setJoinInput(e.target.value)}
+            placeholder="e.g. abc-def-ghj or paste link"
             autoFocus
-            className="w-full h-12 rounded-full bg-white border-[1.5px] border-primary px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF]"
+            disabled={joinSession.isPending}
+            className="h-12 w-full rounded-full border-[1.5px] border-primary bg-white px-5 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-primary/40 placeholder:text-[#9CA3AF] disabled:opacity-50"
             onKeyDown={(e) => e.key === "Enter" && handleJoin()}
           />
-          <Button onClick={handleJoin} className="w-full h-12">
-            Join Session
+          <Button
+            onClick={handleJoin}
+            disabled={joinSession.isPending || !joinInput.trim()}
+            className="h-12 w-full"
+          >
+            {joinSession.isPending && <Spinner />}
+            {joinSession.isPending ? "Joining..." : "Join Session"}
           </Button>
         </DialogContent>
       </Dialog>
 
       {/* Command palette */}
-      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <CommandInput placeholder="Search sessions..." />
+      <CommandDialog
+        open={searchOpen}
+        onOpenChange={(o) => {
+          setSearchOpen(o);
+          if (!o) setSearchQuery("");
+        }}
+      >
+        <CommandInput
+          placeholder="Search sessions..."
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+        />
         <CommandList>
           <CommandEmpty>No sessions found.</CommandEmpty>
           <CommandGroup heading="Sessions">
-            {sessions.map((s) => (
+            {searchResults.map((s) => (
               <CommandItem
                 key={s.id}
-                value={s.title}
+                value={s.name}
                 onSelect={() => {
                   setSearchOpen(false);
-                  router.push(`/sessions/${s.id}`);
+                  setSearchQuery("");
+                  router.push(`/sessions/${s.short_id}`);
                 }}
               >
-                {s.title}
+                {s.name}
               </CommandItem>
             ))}
           </CommandGroup>

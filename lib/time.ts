@@ -7,8 +7,36 @@ const UNITS: [number, string, string][] = [
   [60_000, "minute", "minutes"],
 ];
 
-export function timeAgo(date: number | Date): string {
-  const ms = Date.now() - (typeof date === "number" ? date : date.getTime());
+/**
+ * Converts a backend OffsetDateTime tuple [year, day_of_year, hour, min, sec, nanos, ...]
+ * into a JS Date.
+ */
+function parseOffsetDateTimeArray(arr: number[]): Date {
+  const [year, dayOfYear, hour, minute, second] = arr;
+  const jan1 = new Date(Date.UTC(year, 0, 1));
+  jan1.setUTCDate(jan1.getUTCDate() + dayOfYear - 1);
+  jan1.setUTCHours(hour, minute, second);
+  return jan1;
+}
+
+function toTimestamp(date: unknown): number {
+  if (Array.isArray(date)) {
+    return parseOffsetDateTimeArray(date as number[]).getTime();
+  }
+  if (typeof date === "string") {
+    return new Date(date).getTime();
+  }
+  if (typeof date === "number") {
+    return date;
+  }
+  if (date instanceof Date) {
+    return date.getTime();
+  }
+  return Date.now();
+}
+
+export function timeAgo(date: unknown): string {
+  const ms = Date.now() - toTimestamp(date);
 
   for (const [threshold, singular, plural] of UNITS) {
     if (ms >= threshold) {

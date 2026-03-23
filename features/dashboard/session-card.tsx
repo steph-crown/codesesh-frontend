@@ -17,16 +17,24 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarGroup } from "@/components/ui/avatar";
-import type { Session } from "@/lib/sessions";
-import { getColorForUser } from "@/lib/colors";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+} from "@/components/ui/avatar";
+import type { SessionSummary } from "@/lib/api-types";
+import { useParticipants } from "@/hooks/use-sessions";
+import { getColorByName } from "@/lib/colors";
 import { timeAgo } from "@/lib/time";
 
-const PRIVACY_CONFIG = {
+const VISIBILITY_CONFIG = {
   private: { icon: LockIcon, label: "Private" },
-  view: { icon: ViewIcon, label: "View only" },
+  view_only: { icon: ViewIcon, label: "View only" },
   edit: { icon: PencilEdit02Icon, label: "Can edit" },
 } as const;
+
+const MAX_AVATARS = 5;
 
 function getInitials(name: string) {
   return name
@@ -40,122 +48,148 @@ function getInitials(name: string) {
 export function SessionCard({
   session,
   onRename,
-  onDelete,
+  onEnd,
 }: Readonly<{
-  session: Session;
+  session: SessionSummary;
   onRename: (id: string) => void;
-  onDelete: (id: string) => void;
+  onEnd: (id: string) => void;
 }>) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const visConfig = VISIBILITY_CONFIG[session.visibility];
+  const { data: participants } = useParticipants(session.short_id);
+  const overflow =
+    participants && participants.length > MAX_AVATARS
+      ? participants.length - MAX_AVATARS
+      : 0;
 
   return (
     <Link
-      href={`/sessions/${session.id}`}
-      className="group relative block rounded-[1rem] bg-white border border-[#ededea] p-8 transition-shadow hover:shadow-md"
+      href={`/sessions/${session.short_id}`}
+      className="group relative block rounded-[1rem] border border-[#ededea] bg-white p-8 transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-[#0A0A0A] truncate">
-            {session.title}
+          <h3 className="truncate text-base font-semibold text-[#0A0A0A]">
+            {session.name}
           </h3>
           <div className="mt-1.5 flex items-center gap-2">
             <span className="flex items-center gap-1 text-xs text-[#9CA3AF]">
-              <HugeiconsIcon
-                icon={PRIVACY_CONFIG[session.privacy].icon}
-                size={12}
-                strokeWidth={2}
-              />
-              {PRIVACY_CONFIG[session.privacy].label}
+              <HugeiconsIcon icon={visConfig.icon} size={12} strokeWidth={2} />
+              {visConfig.label}
             </span>
             <span className="text-[#D1D5DB]">&middot;</span>
             <span className="text-xs text-[#9CA3AF]">
-              {session.isOwner ? "Created by you" : "Joined session"}
+              {session.is_owner ? "Created by you" : "Joined session"}
             </span>
+            {session.status === "ended" && (
+              <>
+                <span className="text-[#D1D5DB]">&middot;</span>
+                <span className="text-xs font-medium text-red-400">Ended</span>
+              </>
+            )}
           </div>
         </div>
 
-        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            className="opacity-0 group-hover:opacity-100 p-1.5 -m-1.5 rounded-md hover:bg-[#FAF5F0] transition-opacity"
-          >
-            <HugeiconsIcon icon={MoreVerticalIcon} size={18} strokeWidth={2} />
-          </PopoverTrigger>
-          <PopoverContent
-            align="end"
-            side="bottom"
-            sideOffset={4}
-            className="w-48 p-1.5 gap-0 rounded-lg!"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <button
+        <div className="flex shrink-0 items-center gap-2">
+          {participants && participants.length > 0 && (
+            <AvatarGroup>
+              {participants.slice(0, MAX_AVATARS).map((p) => (
+                <Avatar key={p.user_id} size="sm">
+                  <AvatarFallback color={getColorByName(p.color)}>
+                    {getInitials(p.display_name)}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+              {overflow > 0 && (
+                <AvatarGroupCount className="text-[10px]">
+                  +{overflow}
+                </AvatarGroupCount>
+              )}
+            </AvatarGroup>
+          )}
+
+        {session.is_owner && session.status === "active" && (
+          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+            <PopoverTrigger
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setMenuOpen(false);
-                onRename(session.id);
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors"
+              className="-m-1.5 rounded-md p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
             >
               <HugeiconsIcon
-                icon={PencilEdit01Icon}
-                size={16}
+                icon={MoreVerticalIcon}
+                size={18}
                 strokeWidth={2}
               />
-              Rename
-            </button>
-            <button
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              side="bottom"
+              sideOffset={4}
+              className="w-48 gap-0 rounded-lg! p-1.5"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setMenuOpen(false);
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0A0A0A] hover:bg-[#FAF5F0] transition-colors"
             >
-              <HugeiconsIcon
-                icon={PlayCircle02Icon}
-                size={16}
-                strokeWidth={2}
-              />
-              Resume session
-            </button>
-            <div className="my-1 h-px bg-[#E5E0DA]" />
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setMenuOpen(false);
-                onDelete(session.id);
-              }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
-            >
-              <HugeiconsIcon icon={Delete01Icon} size={16} strokeWidth={2} />
-              Delete
-            </button>
-          </PopoverContent>
-        </Popover>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMenuOpen(false);
+                  onRename(session.short_id);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]"
+              >
+                <HugeiconsIcon
+                  icon={PencilEdit01Icon}
+                  size={16}
+                  strokeWidth={2}
+                />
+                Rename
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMenuOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0A0A0A] transition-colors hover:bg-[#FAF5F0]"
+              >
+                <HugeiconsIcon
+                  icon={PlayCircle02Icon}
+                  size={16}
+                  strokeWidth={2}
+                />
+                Open session
+              </button>
+              <div className="my-1 h-px bg-[#E5E0DA]" />
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMenuOpen(false);
+                  onEnd(session.short_id);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-50"
+              >
+                <HugeiconsIcon icon={Delete01Icon} size={16} strokeWidth={2} />
+                End session
+              </button>
+            </PopoverContent>
+          </Popover>
+        )}
+        </div>
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <AvatarGroup>
-          {session.contributors.slice(0, 4).map((c) => {
-            const userColor = getColorForUser(c.username);
-            return (
-              <Avatar key={c.username} size="sm">
-                <AvatarFallback color={userColor}>
-                  {getInitials(c.username)}
-                </AvatarFallback>
-              </Avatar>
-            );
-          })}
-        </AvatarGroup>
-        <p className="text-xs text-[#9CA3AF]">{timeAgo(session.updatedAt)}</p>
+        <span className="rounded-full bg-[#FAF5F0] px-2.5 py-0.5 text-[10px] font-medium text-[#9CA3AF]">
+          {session.language}
+        </span>
+        <p className="text-xs text-[#9CA3AF]">
+          {timeAgo(session.last_activity_at)}
+        </p>
       </div>
     </Link>
   );
