@@ -22,6 +22,7 @@ import type {
   TextChangeDelta,
 } from "@/lib/ws-messages";
 import { useWebSocket, type ConnectionState } from "@/hooks/use-websocket";
+import { playPingSound } from "@/lib/play-ping-sound";
 
 type SessionState = {
   session: SessionDetail;
@@ -236,6 +237,7 @@ export function SessionProvider({
           break;
         case "ping_received": {
           const who = msg.from_display_name;
+          playPingSound();
           if (msg.scope === "everyone") {
             toast.info(`${who} pinged everyone`, {
               description: "Someone wants attention in this session.",
