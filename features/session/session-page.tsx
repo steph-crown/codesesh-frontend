@@ -497,6 +497,7 @@ export function SessionPage({
         running={running}
         readOnly={readOnlyCombined}
         connectionStatus={connectionStatus}
+        currentUserId={userId ?? ""}
       />
 
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />

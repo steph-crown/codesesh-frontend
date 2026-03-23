@@ -15,6 +15,8 @@ export interface SessionSummary {
 }
 
 export interface SessionDetail extends SessionSummary {
+  /** Session creator (host); compare to `Participant.user_id` for role. */
+  host_id: string;
   content: string;
   updated_at: unknown;
 }

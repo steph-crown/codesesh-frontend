@@ -11,14 +11,13 @@ import {
   MoreVerticalIcon,
   Notification03Icon,
 } from "@hugeicons/core-free-icons";
-import { Avatar, AvatarFallback, AvatarGroup } from "@/components/ui/avatar";
+import { AvatarGroup } from "@/components/ui/avatar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { SessionDetail, Participant } from "@/lib/api-types";
-import { getColorByName } from "@/lib/colors";
 import {
   useUpdateSessionName,
   useUpdateSessionVisibility,
@@ -31,16 +30,8 @@ import {
   type ConnectionStatus,
 } from "./connection-indicator";
 import { PingMenu } from "./ping-menu";
+import { ParticipantAvatarHover } from "./participant-avatar-hover";
 import { ShareDialog } from "./share-dialog";
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export function SessionToolbar({
   session,
@@ -51,6 +42,7 @@ export function SessionToolbar({
   running = false,
   readOnly = false,
   connectionStatus = "connected",
+  currentUserId,
 }: {
   session: SessionDetail;
   participants: Participant[];
@@ -60,6 +52,7 @@ export function SessionToolbar({
   running?: boolean;
   readOnly?: boolean;
   connectionStatus?: ConnectionStatus;
+  currentUserId?: string;
 }) {
   const router = useRouter();
   const updateName = useUpdateSessionName();
@@ -165,11 +158,12 @@ export function SessionToolbar({
 
           <AvatarGroup>
             {participants.slice(0, 4).map((p) => (
-              <Avatar key={p.user_id} size="sm">
-                <AvatarFallback color={getColorByName(p.color)}>
-                  {getInitials(p.display_name)}
-                </AvatarFallback>
-              </Avatar>
+              <ParticipantAvatarHover
+                key={p.user_id}
+                participant={p}
+                hostId={session.host_id}
+                currentUserId={currentUserId}
+              />
             ))}
           </AvatarGroup>
 
@@ -216,11 +210,12 @@ export function SessionToolbar({
             <div className="flex items-center gap-2 px-2.5 py-2">
               <AvatarGroup>
                 {participants.slice(0, 4).map((p) => (
-                  <Avatar key={p.user_id} size="sm">
-                    <AvatarFallback color={getColorByName(p.color)}>
-                      {getInitials(p.display_name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ParticipantAvatarHover
+                    key={p.user_id}
+                    participant={p}
+                    hostId={session.host_id}
+                    currentUserId={currentUserId}
+                  />
                 ))}
               </AvatarGroup>
               <span className="text-xs text-[#9CA3AF]">

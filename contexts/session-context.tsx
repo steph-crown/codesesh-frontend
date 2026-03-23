@@ -64,7 +64,7 @@ function infoToParticipant(p: ParticipantInfo): Participant {
     user_id: p.user_id,
     display_name: p.display_name,
     color: p.color,
-    joined_at: new Date().toISOString(),
+    joined_at: p.joined_at ?? new Date().toISOString(),
     is_active: true,
   };
 }
@@ -225,6 +225,7 @@ export function SessionProvider({
               user_id: msg.user_id,
               display_name: msg.display_name,
               color: msg.color,
+              joined_at: msg.joined_at,
             },
           });
           break;

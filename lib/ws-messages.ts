@@ -71,6 +71,8 @@ export interface ParticipantInfo {
   user_id: string;
   display_name: string;
   color: string;
+  /** ISO timestamp from server (first join time for this session). */
+  joined_at: string;
 }
 
 export interface ChatMessagePayload {
@@ -116,6 +118,7 @@ export interface ParticipantPayload {
   user_id: string;
   display_name: string;
   color: string;
+  joined_at: string;
 }
 
 export interface ParticipantLeavePayload {
@@ -177,7 +180,13 @@ export type ServerMessage =
       user_id: string;
       display_name: string;
     }
-  | { type: "participant_join"; user_id: string; display_name: string; color: string }
+  | {
+      type: "participant_join";
+      user_id: string;
+      display_name: string;
+      color: string;
+      joined_at: string;
+    }
   | { type: "participant_leave"; user_id: string; display_name: string }
   | { type: "session_ended"; reason: SessionEndReason }
   | { type: "error"; code: string; message: string };
