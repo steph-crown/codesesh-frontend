@@ -459,7 +459,7 @@ export function SessionPage({
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, language }),
+        body: JSON.stringify({ code, language, session_id: session.id, user_id: userId }),
       });
 
       const data = await res.json();
