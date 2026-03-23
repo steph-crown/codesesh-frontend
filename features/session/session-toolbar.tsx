@@ -37,6 +37,7 @@ import { useSessionContext } from "@/contexts/session-context";
 export function SessionToolbar({
   session,
   participants,
+  presentUserIds = [],
   language,
   onLanguageChange,
   onRun,
@@ -46,7 +47,10 @@ export function SessionToolbar({
   currentUserId,
 }: {
   session: SessionDetail;
+  /** All session members (for avatars). */
   participants: Participant[];
+  /** Subset of `participants` currently connected via WebSocket (for presence ring + ping list). */
+  presentUserIds?: string[];
   language: string;
   onLanguageChange: (lang: string) => void;
   onRun: () => void;
@@ -93,18 +97,25 @@ export function SessionToolbar({
     }
   }
 
+  const presentSet = useMemo(
+    () => new Set(presentUserIds),
+    [presentUserIds],
+  );
+
   const pingContributors = useMemo(
     () =>
       participants
         .filter(
-          (p) => !currentUserId || p.user_id !== currentUserId,
+          (p) =>
+            presentSet.has(p.user_id) &&
+            (!currentUserId || p.user_id !== currentUserId),
         )
         .map((p) => ({
           user_id: p.user_id,
           display_name: p.display_name,
           color: p.color,
         })),
-    [participants, currentUserId],
+    [participants, currentUserId, presentSet],
   );
 
   return (
@@ -174,6 +185,8 @@ export function SessionToolbar({
                 participant={p}
                 hostId={session.host_id}
                 currentUserId={currentUserId}
+                isPresent={presentSet.has(p.user_id)}
+                showPresenceState={connectionStatus === "connected"}
               />
             ))}
           </AvatarGroup>
@@ -230,6 +243,8 @@ export function SessionToolbar({
                     participant={p}
                     hostId={session.host_id}
                     currentUserId={currentUserId}
+                    isPresent={presentSet.has(p.user_id)}
+                    showPresenceState={connectionStatus === "connected"}
                   />
                 ))}
               </AvatarGroup>

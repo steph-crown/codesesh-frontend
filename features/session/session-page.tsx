@@ -6,8 +6,9 @@ import {
   useCallback,
   useLayoutEffect,
   useEffect,
+  useMemo,
 } from "react";
-import type { SessionDetail, ChatMessage } from "@/lib/api-types";
+import type { SessionDetail, ChatMessage, Participant } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CommandLineIcon, LockIcon } from "@hugeicons/core-free-icons";
@@ -208,6 +209,43 @@ export function SessionPage({
 
   const mergedParticipants =
     ctx.participants.length > 0 ? ctx.participants : (participants ?? []);
+
+  /** Everyone who joined (REST), overlaid with live WS data when available — for toolbar avatars. */
+  const toolbarParticipants = useMemo(() => {
+    const api = participants ?? [];
+    const byId = new Map<string, Participant>();
+    for (const p of api) {
+      byId.set(p.user_id, p);
+    }
+    for (const p of ctx.participants) {
+      const prev = byId.get(p.user_id);
+      byId.set(
+        p.user_id,
+        prev
+          ? {
+              ...prev,
+              display_name: p.display_name,
+              color: p.color,
+              joined_at: p.joined_at ?? prev.joined_at,
+              is_active: p.is_active,
+            }
+          : p,
+      );
+    }
+    if (byId.size === 0 && ctx.participants.length > 0) {
+      for (const p of ctx.participants) {
+        byId.set(p.user_id, p);
+      }
+    }
+    return Array.from(byId.values());
+  }, [participants, ctx.participants]);
+
+  /** User IDs currently connected on the WebSocket (live presence). */
+  const presentUserIds = useMemo(() => {
+    if (ctx.connectionState !== "connected") return [];
+    return ctx.participants.map((p) => p.user_id);
+  }, [ctx.connectionState, ctx.participants]);
+
   const mergedMessages =
     ctx.messages.length > 0 ? ctx.messages : apiMessages;
 
@@ -492,7 +530,8 @@ export function SessionPage({
     <div className="dark flex size-full flex-col bg-[#020617]">
       <SessionToolbar
         session={session}
-        participants={mergedParticipants}
+        participants={toolbarParticipants}
+        presentUserIds={presentUserIds}
         language={language}
         onLanguageChange={handleLanguageChange}
         onRun={runCode}

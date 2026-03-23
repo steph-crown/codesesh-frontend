@@ -27,12 +27,18 @@ export function ParticipantAvatarHover({
   participant,
   hostId,
   currentUserId,
+  isPresent = false,
+  showPresenceState = false,
   className,
 }: {
   participant: Participant;
   hostId: string;
   /** When set, shows "(Me)" after the name for this participant. */
   currentUserId?: string;
+  /** Connected on the session WebSocket right now (live in the room). */
+  isPresent?: boolean;
+  /** When true, show in-popover presence line (hide while WS not connected). */
+  showPresenceState?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -84,11 +90,19 @@ export function ParticipantAvatarHover({
         onMouseEnter={onEnter}
         onMouseLeave={scheduleClose}
       >
-        <Avatar size="sm">
-          <AvatarFallback color={getColorByName(participant.color)}>
-            {getInitials(participant.display_name)}
-          </AvatarFallback>
-        </Avatar>
+        <span
+          className={cn(
+            "inline-flex rounded-full",
+            isPresent &&
+              "ring-2 ring-[#22c55e] ring-offset-[3px] ring-offset-[#111827]",
+          )}
+        >
+          <Avatar size="sm">
+            <AvatarFallback color={getColorByName(participant.color)}>
+              {getInitials(participant.display_name)}
+            </AvatarFallback>
+          </Avatar>
+        </span>
       </PopoverTrigger>
       <PopoverContent
         align="center"
@@ -106,6 +120,13 @@ export function ParticipantAvatarHover({
         </p>
         <p className="text-[#9CA3AF]">
           {isCreator ? "Creator" : "Joiner"}
+          {showPresenceState ? (
+            isPresent ? (
+              <span className="text-[#22c55e]"> · In session</span>
+            ) : (
+              <span className="text-[#6B7280]"> · Away</span>
+            )
+          ) : null}
         </p>
         <p className="text-[10px] text-[#6B7280]">Joined {joined}</p>
       </PopoverContent>
