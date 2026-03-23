@@ -50,7 +50,9 @@ export function PingMenu({
           </span>
           Ping everyone
         </button>
-        <div className="my-1 h-px bg-white/10" />
+        {contributors.length > 0 ? (
+          <div className="my-1 h-px bg-white/10" />
+        ) : null}
         {contributors.map((c) => (
           <button
             type="button"
