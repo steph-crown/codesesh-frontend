@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
@@ -15,6 +16,7 @@ import { applyTextDelta } from "@/lib/apply-text-delta";
 import { getSessionWsUrl } from "@/lib/ws-url";
 import type {
   ChatMessagePayload,
+  ClientMessage,
   EditorRange,
   ParticipantInfo,
   ServerMessage,
@@ -168,6 +170,10 @@ export function SessionProvider({
   const isApplyingRemoteEdit = useRef(false);
   const hasReceivedFullSync = useRef(false);
   const [remoteEpoch, setRemoteEpoch] = useState(0);
+  const sendMessageForResyncRef = useRef<((msg: ClientMessage) => void) | null>(
+    null,
+  );
+  const lastVersionResyncAtRef = useRef(0);
 
   const initial: SessionState = {
     session,
@@ -260,6 +266,14 @@ export function SessionProvider({
           if (msg.code === "EVENT_CAP_REACHED") {
             dispatch({ type: "session_ended" });
             toast.info("This session has ended");
+            break;
+          }
+          if (msg.code === "VERSION_MISMATCH") {
+            const now = Date.now();
+            if (now - lastVersionResyncAtRef.current > 2000) {
+              lastVersionResyncAtRef.current = now;
+              sendMessageForResyncRef.current?.({ type: "request_full_sync" });
+            }
           }
           break;
         default:
@@ -279,6 +293,10 @@ export function SessionProvider({
     onMessage,
     enabled: enabled && !!userId,
   });
+
+  useEffect(() => {
+    sendMessageForResyncRef.current = sendMessage;
+  }, [sendMessage]);
 
   const sendTextChange = useCallback(
     (range: EditorRange, text: string, version: number) => {

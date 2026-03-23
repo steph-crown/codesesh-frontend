@@ -2,33 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { LANGUAGES, type Language } from "@/lib/code-run-languages";
 
-export type Language = {
-  id: string;
-  label: string;
-  monacoId: string;
-};
-
-export const LANGUAGES: Language[] = [
-  { id: "typescript", label: "TypeScript", monacoId: "typescript" },
-  { id: "javascript", label: "JavaScript", monacoId: "javascript" },
-  { id: "python", label: "Python", monacoId: "python" },
-  { id: "go", label: "Go", monacoId: "go" },
-  { id: "rust", label: "Rust", monacoId: "rust" },
-  { id: "cpp", label: "C++", monacoId: "cpp" },
-  { id: "c", label: "C", monacoId: "c" },
-  { id: "csharp", label: "C#", monacoId: "csharp" },
-  { id: "java", label: "Java", monacoId: "java" },
-  { id: "kotlin", label: "Kotlin", monacoId: "kotlin" },
-  { id: "swift", label: "Swift", monacoId: "swift" },
-  { id: "ruby", label: "Ruby", monacoId: "ruby" },
-  { id: "php", label: "PHP", monacoId: "php" },
-  { id: "dart", label: "Dart", monacoId: "dart" },
-  { id: "scala", label: "Scala", monacoId: "scala" },
-  { id: "elixir", label: "Elixir", monacoId: "elixir" },
-  { id: "erlang", label: "Erlang", monacoId: "erlang" },
-  { id: "racket", label: "Racket", monacoId: "scheme" },
-];
+export { LANGUAGES, type Language };
 
 export function LanguageSelector({
   value,

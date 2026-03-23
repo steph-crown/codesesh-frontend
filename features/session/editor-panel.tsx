@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useImperativeHandle, forwardRef, useEffect } from "react";
-import Editor, { type OnMount } from "@monaco-editor/react";
+import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import { debounce } from "@/lib/utils";
+import { CODE_RUN_SPECS } from "@/lib/code-run-languages";
 import type { EditorRange } from "@/lib/ws-messages";
 import { LANGUAGES } from "./language-selector";
 
@@ -352,18 +353,6 @@ end
 IO.inspect(TwoSum.solve([2, 7, 11, 15], 9))
 IO.inspect(TwoSum.solve([3, 2, 4], 6))`,
 
-  erlang: `main(_) ->
-    io:format("~p~n", [two_sum([2, 7, 11, 15], 9, #{})]),
-    io:format("~p~n", [two_sum([3, 2, 4], 6, #{})]).
-
-two_sum([], _Target, _Seen) -> [];
-two_sum([Num | Rest], Target, Seen) ->
-    Complement = Target - Num,
-    case maps:find(Complement, Seen) of
-        {ok, J} -> [J, maps:size(Seen)];
-        error -> two_sum(Rest, Target, Seen#{Num => maps:size(Seen)})
-    end.`,
-
   racket: `#lang racket
 
 (define (two-sum nums target)
@@ -389,7 +378,7 @@ export type EditorCollaboration = {
   setLocalContent: (content: string) => void;
   sendCursorMove?: (line: number, column: number) => void;
   isApplyingRemoteEdit: React.MutableRefObject<boolean>;
-  /** First full_sync: false → setValue then true; later full_sync (reconnect): executeEdits */
+  /** First successful remote apply sets this true (used for epoch edge cases). */
   hasReceivedFullSync: React.MutableRefObject<boolean>;
 };
 
@@ -417,11 +406,42 @@ export const EditorPanel = forwardRef<
   const monacoLang =
     LANGUAGES.find((l) => l.id === language)?.monacoId ?? "typescript";
 
-  // Empty string from API must show an empty editor, not the template — use `??` / explicit undefined check, not `||`.
+  /** Stable virtual file path so TS/JS language service treats the buffer as one module (avoids ghost TS2393 after remote `setValue`). */
+  const modelPath =
+    language in CODE_RUN_SPECS
+      ? CODE_RUN_SPECS[language as keyof typeof CODE_RUN_SPECS].filename
+      : "main.ts";
+
+  const beforeMount = (monaco: Monaco) => {
+    const ts = monaco.languages.typescript;
+    const commonTs = {
+      target: ts.ScriptTarget.ES2020,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      noEmit: true,
+      allowNonTsExtensions: true,
+      isolatedModules: true,
+    };
+    ts.typescriptDefaults.setCompilerOptions({
+      ...commonTs,
+      allowJs: true,
+    });
+    ts.javascriptDefaults.setCompilerOptions({
+      ...commonTs,
+      allowJs: true,
+    });
+  };
+
+  // Live `content` must win over `initialContent`: `session.content` from the first REST load never updates
+  // when collaborators edit. Remounting the editor (e.g. language switch) with only `initialContent`
+  // would load stale text and could emit `text_change` that overwrites the real session buffer on the server.
+  // Empty string from API must show an empty editor — use `??` / explicit undefined checks, not `||`.
   const defaultValue =
-    initialContent !== undefined
-      ? initialContent
-      : (DEFAULT_CODE[language] ?? DEFAULT_CODE.typescript);
+    content !== undefined
+      ? content
+      : initialContent !== undefined
+        ? initialContent
+        : (DEFAULT_CODE[language] ?? DEFAULT_CODE.typescript);
 
   const cursorSendRef = useRef(collaboration?.sendCursorMove);
   useEffect(() => {
@@ -459,17 +479,20 @@ export const EditorPanel = forwardRef<
         collaboration;
       editor.onDidChangeModelContent((e) => {
         if (isApplyingRemoteEdit.current) return;
-        const ch = e.changes[0];
-        if (!ch) return;
-        const range: EditorRange = {
-          start_line: ch.range.startLineNumber,
-          start_column: ch.range.startColumn,
-          end_line: ch.range.endLineNumber,
-          end_column: ch.range.endColumn,
-        };
-        sendTextChange(range, ch.text, docVersionRef.current);
-        bumpLocalVersion();
-        docVersionRef.current += 1;
+        if (e.changes.length === 0) return;
+        // Monaco can emit multiple ranges in one transaction (paste, multi-cursor). Each must be
+        // sent so the server and peers apply the same sequence (same as WS message order).
+        for (const ch of e.changes) {
+          const range: EditorRange = {
+            start_line: ch.range.startLineNumber,
+            start_column: ch.range.startColumn,
+            end_line: ch.range.endLineNumber,
+            end_column: ch.range.endColumn,
+          };
+          sendTextChange(range, ch.text, docVersionRef.current);
+          bumpLocalVersion();
+          docVersionRef.current += 1;
+        }
         setLocalContent(editor.getValue());
       });
       editor.onDidChangeCursorPosition((ev) => {
@@ -508,8 +531,6 @@ export const EditorPanel = forwardRef<
     const remoteEpochAdvanced =
       prevRemoteEpochRef.current !== remoteEpoch;
     prevRemoteEpochRef.current = remoteEpoch;
-    const isReconnectFullSync =
-      remoteEpochAdvanced && fullSyncRef.current;
 
     if (ed.getValue() === content) {
       if (remoteEpochAdvanced && !fullSyncRef.current) {
@@ -520,21 +541,17 @@ export const EditorPanel = forwardRef<
 
     isApplyingRemoteEdit.current = true;
     try {
-      if (isReconnectFullSync) {
-        const model = ed.getModel();
-        if (model) {
-          const fullRange = model.getFullModelRange();
-          ed.executeEdits("remote-full-sync", [
-            { range: fullRange, text: content, forceMoveMarkers: true },
-          ]);
-        } else {
-          ed.setValue(content);
-        }
-      } else if (!fullSyncRef.current) {
-        ed.setValue(content);
-        fullSyncRef.current = true;
+      const model = ed.getModel();
+      if (model) {
+        const fullRange = model.getFullModelRange();
+        ed.executeEdits("remote-sync", [
+          { range: fullRange, text: content, forceMoveMarkers: true },
+        ]);
       } else {
         ed.setValue(content);
+      }
+      if (!fullSyncRef.current) {
+        fullSyncRef.current = true;
       }
     } finally {
       queueMicrotask(() => {
@@ -546,10 +563,12 @@ export const EditorPanel = forwardRef<
   return (
     <div className="size-full overflow-hidden rounded-lg bg-[#1E1E1E]">
       <Editor
+        path={modelPath}
         height="100%"
         language={monacoLang}
         defaultValue={defaultValue}
         theme="vs-dark"
+        beforeMount={beforeMount}
         onMount={handleMount}
         options={{
           readOnly,

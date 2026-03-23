@@ -507,6 +507,34 @@ export function SessionPage({
     }
   }
 
+  const runCodeRef = useRef(runCode);
+  runCodeRef.current = runCode;
+
+  useEffect(() => {
+    if (readOnlyCombined) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey) || e.key !== "Enter") return;
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (t.closest(".monaco-editor")) {
+        // Run from code editor
+      } else if (t.closest("[data-codesesh-no-run-shortcut]")) {
+        return;
+      } else if (
+        t.tagName === "TEXTAREA" ||
+        t.tagName === "INPUT" ||
+        t.isContentEditable
+      ) {
+        return;
+      }
+      e.preventDefault();
+      void runCodeRef.current();
+    }
+    globalThis.window.addEventListener("keydown", onKeyDown, true);
+    return () =>
+      globalThis.window.removeEventListener("keydown", onKeyDown, true);
+  }, [readOnlyCombined]);
+
   function handleSendMessage(content: string) {
     if (ctx.connectionState === "connected") {
       ctx.sendChatMessage(content);

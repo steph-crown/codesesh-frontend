@@ -17,7 +17,6 @@ export type SessionLanguageWire =
   | "dart"
   | "scala"
   | "elixir"
-  | "erlang"
   | "racket";
 
 export interface EditorRange {
@@ -60,6 +59,11 @@ export interface ClientMessageLeave {
   type: "leave";
 }
 
+/** Ask server for authoritative document (recovery after `VERSION_MISMATCH`). */
+export interface ClientMessageRequestFullSync {
+  type: "request_full_sync";
+}
+
 /** `target_user_id: null` = ping everyone except yourself. */
 export interface ClientMessagePing {
   type: "ping";
@@ -68,6 +72,7 @@ export interface ClientMessagePing {
 
 export type ClientMessage =
   | ClientMessageTextChange
+  | ClientMessageRequestFullSync
   | ClientMessageCursorMove
   | ClientMessageChat
   | ClientMessageLanguage

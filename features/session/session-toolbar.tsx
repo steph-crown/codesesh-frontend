@@ -148,6 +148,8 @@ export function SessionToolbar({
           <LanguageSelector value={language} onChange={onLanguageChange} disabled={readOnly} />
 
           <button
+            type="button"
+            title="Run (⌘↵ or Ctrl+Enter)"
             onClick={onRun}
             disabled={running || readOnly}
             className="ml-1 flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/60 disabled:opacity-50"

@@ -153,7 +153,10 @@ export function NotesPanel({
   }, [editor]);
 
   return (
-    <div className="flex size-full min-h-0 flex-col overflow-hidden rounded-lg border border-white/5 bg-[#0D1117]">
+    <div
+      data-codesesh-no-run-shortcut
+      className="flex size-full min-h-0 flex-col overflow-hidden rounded-lg border border-white/5 bg-[#0D1117]"
+    >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/5 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <HugeiconsIcon

@@ -164,6 +164,7 @@ export function ChatPanel({
 
   return (
     <div
+      data-codesesh-no-run-shortcut
       className={cn(
         "flex size-full flex-col overflow-hidden rounded-lg bg-[#0D1117]",
         className,
