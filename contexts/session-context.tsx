@@ -4,11 +4,9 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useReducer,
   useRef,
-  useState,
 } from "react";
 import { toast } from "sonner";
 import type { SessionDetail, ChatMessage, Participant } from "@/lib/api-types";
@@ -16,8 +14,6 @@ import { applyTextDelta } from "@/lib/apply-text-delta";
 import { getSessionWsUrl } from "@/lib/ws-url";
 import type {
   ChatMessagePayload,
-  ClientMessage,
-  EditorRange,
   ParticipantInfo,
   ServerMessage,
   SessionLanguageWire,
@@ -41,6 +37,7 @@ type Action =
   | { type: "local_set"; content: string }
   | { type: "local_bump" }
   | { type: "text_change_remote"; delta: TextChangeDelta; version: number }
+  | { type: "remote_content"; content: string; version: number }
   | { type: "chat"; msg: ChatMessage }
   | { type: "language"; language: SessionLanguageWire }
   | { type: "participant_join"; p: ParticipantInfo }
@@ -97,6 +94,8 @@ function reducer(state: SessionState, action: Action): SessionState {
         version: action.version,
       };
     }
+    case "remote_content":
+      return { ...state, content: action.content, version: action.version };
     case "chat":
       return {
         ...state,
@@ -138,7 +137,7 @@ export type SessionContextValue = {
   messages: ChatMessage[];
   connectionState: ConnectionState;
   sessionEnded: boolean;
-  sendTextChange: (range: EditorRange, text: string, version: number) => void;
+  sendContentSet: (content: string) => void;
   sendCursorMove: (line: number, column: number) => void;
   sendChatMessage: (content: string) => void;
   sendLanguageChange: (language: SessionLanguageWire) => void;
@@ -146,10 +145,7 @@ export type SessionContextValue = {
   sendPing: (targetUserId: string | null) => void;
   leaveSession: () => void;
   setLocalContent: (content: string) => void;
-  bumpLocalVersion: () => void;
   isApplyingRemoteEdit: React.MutableRefObject<boolean>;
-  hasReceivedFullSync: React.MutableRefObject<boolean>;
-  remoteEpoch: number;
 };
 
 const Ctx = createContext<SessionContextValue | null>(null);
@@ -168,12 +164,6 @@ export function SessionProvider({
   children: React.ReactNode;
 }) {
   const isApplyingRemoteEdit = useRef(false);
-  const hasReceivedFullSync = useRef(false);
-  const [remoteEpoch, setRemoteEpoch] = useState(0);
-  const sendMessageForResyncRef = useRef<((msg: ClientMessage) => void) | null>(
-    null,
-  );
-  const lastVersionResyncAtRef = useRef(0);
 
   const initial: SessionState = {
     session,
@@ -191,7 +181,6 @@ export function SessionProvider({
     (msg: ServerMessage) => {
       switch (msg.type) {
         case "full_sync": {
-          setRemoteEpoch((n) => n + 1);
           dispatch({
             type: "full_sync",
             content: msg.content,
@@ -199,6 +188,14 @@ export function SessionProvider({
             language: msg.language,
             participants: msg.participants,
             messages: msg.messages,
+          });
+          break;
+        }
+        case "content_update": {
+          dispatch({
+            type: "remote_content",
+            content: msg.content,
+            version: msg.version,
           });
           break;
         }
@@ -268,13 +265,6 @@ export function SessionProvider({
             toast.info("This session has ended");
             break;
           }
-          if (msg.code === "VERSION_MISMATCH") {
-            const now = Date.now();
-            if (now - lastVersionResyncAtRef.current > 2000) {
-              lastVersionResyncAtRef.current = now;
-              sendMessageForResyncRef.current?.({ type: "request_full_sync" });
-            }
-          }
           break;
         default:
           break;
@@ -294,25 +284,12 @@ export function SessionProvider({
     enabled: enabled && !!userId,
   });
 
-  useEffect(() => {
-    sendMessageForResyncRef.current = sendMessage;
-  }, [sendMessage]);
-
-  const sendTextChange = useCallback(
-    (range: EditorRange, text: string, version: number) => {
-      sendMessage({
-        type: "text_change",
-        range,
-        text,
-        version,
-      });
+  const sendContentSet = useCallback(
+    (content: string) => {
+      sendMessage({ type: "content_set", content });
     },
     [sendMessage],
   );
-
-  const bumpLocalVersion = useCallback(() => {
-    dispatch({ type: "local_bump" });
-  }, []);
 
   const sendCursorMove = useCallback(
     (line: number, column: number) => {
@@ -361,17 +338,14 @@ export function SessionProvider({
     messages: state.messages,
     connectionState,
     sessionEnded: state.sessionEnded || session.status === "ended",
-    sendTextChange,
+    sendContentSet,
     sendCursorMove,
     sendChatMessage,
     sendLanguageChange,
     sendPing,
     leaveSession,
     setLocalContent,
-    bumpLocalVersion,
     isApplyingRemoteEdit,
-    hasReceivedFullSync,
-    remoteEpoch,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

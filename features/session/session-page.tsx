@@ -581,14 +581,10 @@ export function SessionPage({
             initialContent={session.content}
             content={ctx.content}
             collaboration={{
-              docVersion: ctx.version,
-              remoteEpoch: ctx.remoteEpoch,
-              sendTextChange: ctx.sendTextChange,
-              bumpLocalVersion: ctx.bumpLocalVersion,
+              sendContentSet: ctx.sendContentSet,
               setLocalContent: ctx.setLocalContent,
               sendCursorMove: ctx.sendCursorMove,
               isApplyingRemoteEdit: ctx.isApplyingRemoteEdit,
-              hasReceivedFullSync: ctx.hasReceivedFullSync,
             }}
           />
         )}
@@ -635,14 +631,10 @@ export function SessionPage({
               initialContent={session.content}
               content={ctx.content}
               collaboration={{
-                docVersion: ctx.version,
-                remoteEpoch: ctx.remoteEpoch,
-                sendTextChange: ctx.sendTextChange,
-                bumpLocalVersion: ctx.bumpLocalVersion,
+                sendContentSet: ctx.sendContentSet,
                 setLocalContent: ctx.setLocalContent,
                 sendCursorMove: ctx.sendCursorMove,
                 isApplyingRemoteEdit: ctx.isApplyingRemoteEdit,
-                hasReceivedFullSync: ctx.hasReceivedFullSync,
               }}
             />
           </div>
