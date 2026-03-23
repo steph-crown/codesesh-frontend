@@ -24,7 +24,7 @@ import { cn, debounce } from "@/lib/utils";
 
 const lowlight = createLowlight(common);
 
-const NOTES_PLACEHOLDER = "Your private notes for this session…";
+const NOTES_PLACEHOLDER = "Start typing (markdown style)…";
 
 type SaveStatus = "idle" | "saving" | "saved";
 
@@ -72,9 +72,7 @@ export function NotesPanel({
           .catch((err: unknown) => {
             setSaveStatus("idle");
             const msg =
-              err instanceof ApiError
-                ? err.message
-                : "Could not save notes";
+              err instanceof ApiError ? err.message : "Could not save notes";
             toast.error("Notes not saved", { description: msg });
           });
       }, 1000),
@@ -143,7 +141,12 @@ export function NotesPanel({
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: trimmed }).run();
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: trimmed })
+      .run();
   }, [editor]);
 
   return (
@@ -183,13 +186,12 @@ export function NotesPanel({
       </p>
       {loadFailed && (
         <p className="shrink-0 px-3 pb-1 text-[10px] text-amber-500/90">
-          Could not load saved notes — you can still write; we&apos;ll try to save.
+          Could not load saved notes — you can still write; we&apos;ll try to
+          save.
         </p>
       )}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {editor && (
-          <NotesBubbleMenu editor={editor} onLink={setLink} />
-        )}
+        {editor && <NotesBubbleMenu editor={editor} onLink={setLink} />}
         <EditorContent editor={editor} className="notes-tiptap-content" />
       </div>
     </div>
