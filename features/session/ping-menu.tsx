@@ -21,10 +21,12 @@ function getInitials(name: string) {
 
 export function PingMenu({
   contributors,
-  onPing,
+  onPingEveryone,
+  onPingUser,
 }: {
-  contributors: { username: string; color: string }[];
-  onPing: (username: string | "everyone") => void;
+  contributors: { user_id: string; display_name: string; color: string }[];
+  onPingEveryone: () => void;
+  onPingUser: (userId: string) => void;
 }) {
   return (
     <Popover>
@@ -39,7 +41,8 @@ export function PingMenu({
         className="w-52 gap-0 rounded-lg! border-white/10! bg-[#111827]! p-1.5"
       >
         <button
-          onClick={() => onPing("everyone")}
+          type="button"
+          onClick={onPingEveryone}
           className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#F9FAFB] transition-colors hover:bg-white/5"
         >
           <span className="flex size-6 items-center justify-center rounded-full bg-[#ff3c00]/20 text-[10px] font-bold text-[#ff3c00]">
@@ -50,16 +53,17 @@ export function PingMenu({
         <div className="my-1 h-px bg-white/10" />
         {contributors.map((c) => (
           <button
-            key={c.username}
-            onClick={() => onPing(c.username)}
+            type="button"
+            key={c.user_id}
+            onClick={() => onPingUser(c.user_id)}
             className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#9CA3AF] transition-colors hover:bg-white/5 hover:text-[#F9FAFB]"
           >
             <Avatar size="sm">
               <AvatarFallback color={getColorByName(c.color)}>
-                {getInitials(c.username)}
+                {getInitials(c.display_name)}
               </AvatarFallback>
             </Avatar>
-            {c.username}
+            {c.display_name}
           </button>
         ))}
       </PopoverContent>

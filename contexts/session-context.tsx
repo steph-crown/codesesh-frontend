@@ -139,6 +139,8 @@ export type SessionContextValue = {
   sendCursorMove: (line: number, column: number) => void;
   sendChatMessage: (content: string) => void;
   sendLanguageChange: (language: SessionLanguageWire) => void;
+  /** `null` = ping everyone (except you). */
+  sendPing: (targetUserId: string | null) => void;
   leaveSession: () => void;
   setLocalContent: (content: string) => void;
   bumpLocalVersion: () => void;
@@ -232,6 +234,19 @@ export function SessionProvider({
         case "participant_leave":
           dispatch({ type: "participant_leave", user_id: msg.user_id });
           break;
+        case "ping_received": {
+          const who = msg.from_display_name;
+          if (msg.scope === "everyone") {
+            toast.info(`${who} pinged everyone`, {
+              description: "Someone wants attention in this session.",
+            });
+          } else {
+            toast.info(`${who} pinged you`, {
+              description: "They want your attention.",
+            });
+          }
+          break;
+        }
         case "session_ended":
           dispatch({ type: "session_ended" });
           toast.info("This session has ended");
@@ -300,6 +315,13 @@ export function SessionProvider({
     [sendMessage],
   );
 
+  const sendPing = useCallback(
+    (targetUserId: string | null) => {
+      sendMessage({ type: "ping", target_user_id: targetUserId });
+    },
+    [sendMessage],
+  );
+
   const leaveSession = useCallback(() => {
     sendMessage({ type: "leave" });
     disconnect();
@@ -323,6 +345,7 @@ export function SessionProvider({
     sendCursorMove,
     sendChatMessage,
     sendLanguageChange,
+    sendPing,
     leaveSession,
     setLocalContent,
     bumpLocalVersion,

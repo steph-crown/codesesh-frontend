@@ -60,11 +60,18 @@ export interface ClientMessageLeave {
   type: "leave";
 }
 
+/** `target_user_id: null` = ping everyone except yourself. */
+export interface ClientMessagePing {
+  type: "ping";
+  target_user_id: string | null;
+}
+
 export type ClientMessage =
   | ClientMessageTextChange
   | ClientMessageCursorMove
   | ClientMessageChat
   | ClientMessageLanguage
+  | ClientMessagePing
   | ClientMessageLeave;
 
 export interface ParticipantInfo {
@@ -188,6 +195,13 @@ export type ServerMessage =
       joined_at: string;
     }
   | { type: "participant_leave"; user_id: string; display_name: string }
+  | {
+      type: "ping_received";
+      from_user_id: string;
+      from_display_name: string;
+      from_color: string;
+      scope: "everyone" | "direct";
+    }
   | { type: "session_ended"; reason: SessionEndReason }
   | { type: "error"; code: string; message: string };
 

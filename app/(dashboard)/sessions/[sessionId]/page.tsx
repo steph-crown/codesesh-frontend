@@ -170,7 +170,14 @@ export default function SessionRoute({
   // Step 5 — Handle join errors (race conditions)
   if (joinError?.status === 410) {
     return (
-      <SessionPage session={session} sessionId={sessionId} readOnly />
+      <SessionProvider
+        session={session}
+        sessionId={sessionId}
+        userId={userId ?? ""}
+        enabled={false}
+      >
+        <SessionPage session={session} sessionId={sessionId} readOnly />
+      </SessionProvider>
     );
   }
   if (joinError?.status === 403) {

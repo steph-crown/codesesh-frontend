@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -32,6 +32,7 @@ import {
 import { PingMenu } from "./ping-menu";
 import { ParticipantAvatarHover } from "./participant-avatar-hover";
 import { ShareDialog } from "./share-dialog";
+import { useSessionContext } from "@/contexts/session-context";
 
 export function SessionToolbar({
   session,
@@ -58,6 +59,7 @@ export function SessionToolbar({
   const updateName = useUpdateSessionName();
   const updateVisibility = useUpdateSessionVisibility();
   const endSession = useEndSession();
+  const { sendPing } = useSessionContext();
 
   const isOwnerActive = session.is_owner && session.status === "active";
 
@@ -91,10 +93,19 @@ export function SessionToolbar({
     }
   }
 
-  const contributors = participants.map((p) => ({
-    username: p.display_name,
-    color: p.color,
-  }));
+  const pingContributors = useMemo(
+    () =>
+      participants
+        .filter(
+          (p) => !currentUserId || p.user_id !== currentUserId,
+        )
+        .map((p) => ({
+          user_id: p.user_id,
+          display_name: p.display_name,
+          color: p.color,
+        })),
+    [participants, currentUserId],
+  );
 
   return (
     <>
@@ -173,7 +184,11 @@ export function SessionToolbar({
 
           <div className="h-4 w-px bg-white/10" />
 
-          <PingMenu contributors={contributors} onPing={() => {}} />
+          <PingMenu
+            contributors={pingContributors}
+            onPingEveryone={() => sendPing(null)}
+            onPingUser={(userId) => sendPing(userId)}
+          />
 
           <div className="h-4 w-px bg-white/10" />
 
@@ -241,7 +256,8 @@ export function SessionToolbar({
             </button>
 
             <button
-              onClick={() => {}}
+              type="button"
+              onClick={() => sendPing(null)}
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-[#F9FAFB] transition-colors hover:bg-white/5"
             >
               <HugeiconsIcon
