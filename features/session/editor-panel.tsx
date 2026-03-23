@@ -544,6 +544,7 @@ export const EditorPanel = forwardRef<
         language={monacoLang}
         defaultValue={defaultValue}
         theme="vs-dark"
+        loading={<span className="text-sm text-white">Loading…</span>}
         beforeMount={beforeMount}
         onMount={handleMount}
         options={{

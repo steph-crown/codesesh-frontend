@@ -9,7 +9,7 @@ function getOneCompilerKey(): string | null {
 
 export async function POST(request: Request) {
   try {
-    const { code, language } = await request.json();
+    const { code, language, session_id, user_id } = await request.json();
 
     if (!code || !language) {
       return NextResponse.json(
@@ -41,6 +41,15 @@ export async function POST(request: Request) {
       editorLanguage: language,
       sourceCode: String(code),
     });
+
+    if (session_id && user_id) {
+      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+      fetch(`${base}/api/runs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id, user_id, language }),
+      }).catch(() => {});
+    }
 
     return NextResponse.json({
       stdout: result.stdout,
