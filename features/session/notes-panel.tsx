@@ -80,7 +80,10 @@ export function NotesPanel({
   );
 
   const debouncedSaveRef = useRef(debouncedSave);
-  debouncedSaveRef.current = debouncedSave;
+
+  useEffect(() => {
+    debouncedSaveRef.current = debouncedSave;
+  }, [debouncedSave]);
 
   const editor = useEditor(
     {
