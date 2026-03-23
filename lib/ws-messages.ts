@@ -64,6 +64,12 @@ export interface ClientMessageRequestFullSync {
   type: "request_full_sync";
 }
 
+/** Full-document replacement (debounced by client). */
+export interface ClientMessageContentSet {
+  type: "content_set";
+  content: string;
+}
+
 /** `target_user_id: null` = ping everyone except yourself. */
 export interface ClientMessagePing {
   type: "ping";
@@ -72,6 +78,7 @@ export interface ClientMessagePing {
 
 export type ClientMessage =
   | ClientMessageTextChange
+  | ClientMessageContentSet
   | ClientMessageRequestFullSync
   | ClientMessageCursorMove
   | ClientMessageChat
@@ -165,6 +172,13 @@ export type ServerMessage =
   | {
       type: "text_change";
       delta: TextChangeDelta;
+      version: number;
+      user_id: string;
+      display_name: string;
+    }
+  | {
+      type: "content_update";
+      content: string;
       version: number;
       user_id: string;
       display_name: string;

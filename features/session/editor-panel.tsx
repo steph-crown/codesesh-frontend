@@ -4,7 +4,6 @@ import { useRef, useImperativeHandle, forwardRef, useEffect } from "react";
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 import { debounce } from "@/lib/utils";
 import { CODE_RUN_SPECS } from "@/lib/code-run-languages";
-import type { EditorRange } from "@/lib/ws-messages";
 import { LANGUAGES } from "./language-selector";
 
 type MonacoEditor = Parameters<OnMount>[0];
@@ -371,15 +370,10 @@ IO.inspect(TwoSum.solve([3, 2, 4], 6))`,
 };
 
 export type EditorCollaboration = {
-  docVersion: number;
-  remoteEpoch: number;
-  sendTextChange: (range: EditorRange, text: string, version: number) => void;
-  bumpLocalVersion: () => void;
+  sendContentSet: (content: string) => void;
   setLocalContent: (content: string) => void;
   sendCursorMove?: (line: number, column: number) => void;
   isApplyingRemoteEdit: React.MutableRefObject<boolean>;
-  /** First successful remote apply sets this true (used for epoch edge cases). */
-  hasReceivedFullSync: React.MutableRefObject<boolean>;
 };
 
 export const EditorPanel = forwardRef<
@@ -454,19 +448,18 @@ export const EditorPanel = forwardRef<
     }, 50),
   );
 
-  const docVersionRef = useRef(collaboration?.docVersion ?? 0);
+  const sendContentRef = useRef(collaboration?.sendContentSet);
   useEffect(() => {
-    if (collaboration) docVersionRef.current = collaboration.docVersion;
-    // Only `docVersion` should re-sync the ref (context value is a new object each render).
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- collaboration?.docVersion
-  }, [collaboration?.docVersion]);
+    sendContentRef.current = collaboration?.sendContentSet;
+  }, [collaboration?.sendContentSet]);
 
-  const prevRemoteEpochRef = useRef(collaboration?.remoteEpoch ?? 0);
+  const sendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       suggestPrefSubRef.current?.dispose();
       suggestPrefSubRef.current = null;
+      if (sendTimerRef.current) clearTimeout(sendTimerRef.current);
     };
   }, []);
 
@@ -475,25 +468,16 @@ export const EditorPanel = forwardRef<
     editor.focus();
 
     if (collaboration) {
-      const { sendTextChange, bumpLocalVersion, setLocalContent, isApplyingRemoteEdit } =
-        collaboration;
-      editor.onDidChangeModelContent((e) => {
+      const { setLocalContent, isApplyingRemoteEdit } = collaboration;
+      editor.onDidChangeModelContent(() => {
         if (isApplyingRemoteEdit.current) return;
-        if (e.changes.length === 0) return;
-        // Monaco can emit multiple ranges in one transaction (paste, multi-cursor). Each must be
-        // sent so the server and peers apply the same sequence (same as WS message order).
-        for (const ch of e.changes) {
-          const range: EditorRange = {
-            start_line: ch.range.startLineNumber,
-            start_column: ch.range.startColumn,
-            end_line: ch.range.endLineNumber,
-            end_column: ch.range.endColumn,
-          };
-          sendTextChange(range, ch.text, docVersionRef.current);
-          bumpLocalVersion();
-          docVersionRef.current += 1;
-        }
-        setLocalContent(editor.getValue());
+        const fullContent = editor.getValue();
+        setLocalContent(fullContent);
+        if (sendTimerRef.current) clearTimeout(sendTimerRef.current);
+        sendTimerRef.current = setTimeout(() => {
+          sendTimerRef.current = null;
+          sendContentRef.current?.(fullContent);
+        }, 50);
       });
       editor.onDidChangeCursorPosition((ev) => {
         sendCursorDebounced.current(ev.position.lineNumber, ev.position.column);
@@ -524,22 +508,17 @@ export const EditorPanel = forwardRef<
   useEffect(() => {
     if (content === undefined || !editorRef.current || !collaboration) return;
     const ed = editorRef.current;
-    const isApplyingRemoteEdit = collaboration.isApplyingRemoteEdit;
-    const fullSyncRef = collaboration.hasReceivedFullSync;
-    const { remoteEpoch } = collaboration;
 
-    const remoteEpochAdvanced =
-      prevRemoteEpochRef.current !== remoteEpoch;
-    prevRemoteEpochRef.current = remoteEpoch;
+    if (ed.getValue() === content) return;
 
-    if (ed.getValue() === content) {
-      if (remoteEpochAdvanced && !fullSyncRef.current) {
-        fullSyncRef.current = true;
-      }
-      return;
+    const { isApplyingRemoteEdit } = collaboration;
+    isApplyingRemoteEdit.current = true;
+
+    if (sendTimerRef.current) {
+      clearTimeout(sendTimerRef.current);
+      sendTimerRef.current = null;
     }
 
-    isApplyingRemoteEdit.current = true;
     try {
       const model = ed.getModel();
       if (model) {
@@ -549,9 +528,6 @@ export const EditorPanel = forwardRef<
         ]);
       } else {
         ed.setValue(content);
-      }
-      if (!fullSyncRef.current) {
-        fullSyncRef.current = true;
       }
     } finally {
       queueMicrotask(() => {
