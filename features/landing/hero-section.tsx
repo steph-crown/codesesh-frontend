@@ -17,6 +17,12 @@ import { useUserStore } from "@/stores/user-store";
 import { api } from "@/lib/api";
 import { PALETTE } from "@/lib/colors";
 import { generateSessionName } from "@/lib/session-names";
+import {
+  trackJoinDialogOpen,
+  trackJoinFromLanding,
+  trackSessionCreated,
+  trackUserCreatedGuest,
+} from "@/lib/analytics";
 import { extractSessionCode } from "@/lib/join-code";
 import { useLandingHeroActions } from "./landing-hero-actions-context";
 
@@ -55,6 +61,7 @@ export function HeroSection() {
       try {
         const user = await api.users.create(trimmed, randomColorName());
         setUser(user.id, user.display_name, user.color);
+        trackUserCreatedGuest();
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Failed to create user",
@@ -69,6 +76,7 @@ export function HeroSection() {
       { name: generateSessionName(), language: "typescript" },
       {
         onSuccess: (session) => {
+          trackSessionCreated("hero");
           setDisplayName("");
           router.push(`/sessions/${session.short_id}`);
         },
@@ -84,6 +92,7 @@ export function HeroSection() {
       toast.error("Invalid session code or link.");
       return;
     }
+    trackJoinFromLanding("hero");
     setJoinOpen(false);
     setJoinInput("");
     router.push(`/sessions/${code}`);
@@ -143,7 +152,10 @@ export function HeroSection() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => setJoinOpen(true)}
+              onClick={() => {
+                trackJoinDialogOpen("hero");
+                setJoinOpen(true);
+              }}
               className="h-12 px-7 text-[15px]"
             >
               Join Session

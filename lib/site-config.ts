@@ -40,3 +40,12 @@ export function getSiteOrigin(): string {
 export function getMetadataBase(): URL {
   return new URL(`${getSiteOrigin()}/`);
 }
+
+/** Static Open Graph / Twitter card image in `public/` (1200×630). */
+export const OG_IMAGE_PATH = "/og-image.png" as const;
+export const OG_IMAGE_WIDTH = 1200;
+export const OG_IMAGE_HEIGHT = 630;
+
+export function getOgImageAbsoluteUrl(): string {
+  return new URL(OG_IMAGE_PATH, getMetadataBase()).href;
+}

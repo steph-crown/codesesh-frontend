@@ -23,6 +23,7 @@ import {
 } from "@/hooks/use-sessions";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useSidebar } from "@/hooks/use-sidebar";
+import { trackSessionCreated } from "@/lib/analytics";
 import { generateSessionName } from "@/lib/session-names";
 import {
   SessionFilters,
@@ -82,6 +83,7 @@ export default function MySessionsPage() {
         { name: generateSessionName(), language: "typescript" },
         {
           onSuccess: (session) => {
+            trackSessionCreated("my_sessions");
             router.push(`/sessions/${session.short_id}`);
           },
         },

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { WebVitalsToGa } from "@/components/analytics/web-vitals";
 import { JsonLdWebsite } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -9,6 +11,9 @@ import { IdentityDialog } from "@/components/identity-dialog";
 import {
   getMetadataBase,
   getSiteOrigin,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_PATH,
+  OG_IMAGE_WIDTH,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
   SITE_NAME,
@@ -58,11 +63,27 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
+    url: siteOrigin,
+    images: [
+      {
+        url: OG_IMAGE_PATH,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
+    images: {
+      url: OG_IMAGE_PATH,
+      width: OG_IMAGE_WIDTH,
+      height: OG_IMAGE_HEIGHT,
+      alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    },
   },
   robots: {
     index: true,
@@ -100,6 +121,8 @@ export default function RootLayout({
       className={cn("font-sans", figtree.variable, jetbrainsMono.variable)}
     >
       <body className="antialiased">
+        <GoogleAnalytics />
+        <WebVitalsToGa />
         <JsonLdWebsite />
         <QueryProvider>
           {children}

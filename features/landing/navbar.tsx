@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GithubIcon, Menu01Icon } from "@hugeicons/core-free-icons";
+import { trackJoinDialogOpen } from "@/lib/analytics";
 import { useLandingHeroActions } from "./landing-hero-actions-context";
 
 export function Navbar() {
@@ -86,6 +87,7 @@ export function Navbar() {
                 type="button"
                 className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
                 onClick={() => {
+                  trackJoinDialogOpen("mobile_nav");
                   openJoinDialog();
                   setMenuOpen(false);
                 }}
