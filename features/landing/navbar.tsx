@@ -3,9 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { GithubIcon } from "@hugeicons/core-free-icons";
+import { GithubIcon, Menu01Icon } from "@hugeicons/core-free-icons";
 
 export function Navbar() {
   return (
@@ -19,7 +24,7 @@ export function Navbar() {
           priority
         />
       </Link>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <Link
           href="/my-sessions"
           className="hidden sm:block text-sm font-medium text-[#0A0A0A] hover:text-primary transition-colors"
@@ -32,12 +37,50 @@ export function Navbar() {
           rel="noopener noreferrer"
           className={cn(
             buttonVariants({ variant: "outline", size: "sm" }),
-            "gap-2",
+            "gap-2 shrink-0",
           )}
         >
           <HugeiconsIcon icon={GithubIcon} className="size-4" />
           <span className="hidden sm:inline">Star on GitHub</span>
         </a>
+        <Popover>
+          <PopoverTrigger
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "sm:hidden size-9 shrink-0 p-0",
+            )}
+            aria-label="Open menu"
+          >
+            <HugeiconsIcon icon={Menu01Icon} className="size-4" />
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            side="bottom"
+            sideOffset={8}
+            className="w-52 gap-0 rounded-xl border border-[#DFDDD7] bg-white p-1.5 shadow-lg ring-0"
+          >
+            <nav className="flex flex-col gap-0.5">
+              <Link
+                href="/my-sessions"
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+              >
+                My Sessions
+              </Link>
+              <Link
+                href="/#create-session"
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+              >
+                Create Session
+              </Link>
+              <Link
+                href="/?join=1"
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+              >
+                Join Session
+              </Link>
+            </nav>
+          </PopoverContent>
+        </Popover>
       </div>
     </nav>
   );

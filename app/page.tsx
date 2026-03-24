@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Navbar } from "@/features/landing/navbar";
 import { HeroSection } from "@/features/landing/hero-section";
 import { LiveDemo } from "@/features/landing/live-demo";
@@ -10,7 +11,9 @@ export default function Home() {
     <main className="overflow-x-hidden">
       <Navbar />
       <div className="md:min-h-svh md:flex md:flex-col">
-        <HeroSection />
+        <Suspense fallback={null}>
+          <HeroSection />
+        </Suspense>
         <LiveDemo />
       </div>
       <FeaturesSection />

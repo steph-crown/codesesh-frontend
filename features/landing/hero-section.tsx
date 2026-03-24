@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -25,6 +25,7 @@ function randomColorName() {
 
 export function HeroSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const userId = useUserStore((s) => s.userId);
   const setUser = useUserStore((s) => s.setUser);
   const createSession = useCreateSession();
@@ -33,6 +34,12 @@ export function HeroSection() {
   const [creatingUser, setCreatingUser] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinInput, setJoinInput] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("join") !== "1") return;
+    setJoinOpen(true);
+    router.replace("/", { scroll: false });
+  }, [searchParams, router]);
 
   async function handleCreate() {
     if (!userId) {
@@ -108,7 +115,7 @@ export function HeroSection() {
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
           )}
-          <div className="flex gap-3">
+          <div id="create-session" className="flex scroll-mt-28 gap-3">
             <Button
               size="lg"
               onClick={handleCreate}
