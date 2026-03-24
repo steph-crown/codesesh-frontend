@@ -511,6 +511,7 @@ export const EditorPanel = forwardRef<
 
     if (ed.getValue() === content) return;
 
+    const savedViewState = ed.saveViewState();
     const { isApplyingRemoteEdit } = collaboration;
     isApplyingRemoteEdit.current = true;
 
@@ -528,6 +529,9 @@ export const EditorPanel = forwardRef<
         ]);
       } else {
         ed.setValue(content);
+      }
+      if (savedViewState) {
+        ed.restoreViewState(savedViewState);
       }
     } finally {
       queueMicrotask(() => {
