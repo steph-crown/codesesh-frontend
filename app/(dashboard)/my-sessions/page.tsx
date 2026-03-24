@@ -161,9 +161,11 @@ export default function MySessionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="mt-4 flex items-center gap-2">
-        <span className="text-sm text-[#9CA3AF]">Filter by</span>
-        <SessionFilters value={filter} onChange={setFilter} />
+      <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:gap-2">
+        <span className="shrink-0 text-sm text-[#9CA3AF]">Filter by</span>
+        <div className="min-w-0 flex-1 md:flex-none">
+          <SessionFilters value={filter} onChange={setFilter} />
+        </div>
       </div>
 
       {/* Grid */}
