@@ -201,6 +201,25 @@
   padding-left: 1.25rem;
 }
 
+/* Tailwind preflight unstyles all ul/ol — restore markers in notes only */
+.notes-tiptap-content .tiptap ul:not([data-type="taskList"]) {
+  list-style-type: disc;
+  list-style-position: outside;
+}
+
+.notes-tiptap-content .tiptap ul:not([data-type="taskList"]) ul {
+  list-style-type: circle;
+}
+
+.notes-tiptap-content .tiptap ul:not([data-type="taskList"]) ul ul {
+  list-style-type: square;
+}
+
+.notes-tiptap-content .tiptap ol {
+  list-style-type: decimal;
+  list-style-position: outside;
+}
+
 .notes-tiptap-content .tiptap ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
