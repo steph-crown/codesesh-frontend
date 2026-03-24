@@ -1,10 +1,8 @@
-/** Build `ws://` / `wss://` base from `NEXT_PUBLIC_API_URL` (same host as REST). */
+import { API_BASE_URL } from "./api-base-url";
+
+/** Build `ws://` / `wss://` base from the same host as REST (`API_BASE_URL`). */
 export function getWsBaseUrl(): string {
-  const http =
-    typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
-      ? process.env.NEXT_PUBLIC_API_URL
-      : "http://localhost:8080";
-  return http.replace(/^http/, "ws");
+  return API_BASE_URL.replace(/^http/, "ws");
 }
 
 export function getSessionWsUrl(shortId: string, userId: string): string {
