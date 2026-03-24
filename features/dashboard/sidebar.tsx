@@ -127,10 +127,10 @@ export function Sidebar() {
         {showLabels && (
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/logo-icon.svg"
+              src="/logo-with-text.svg"
               alt="CodeSesh"
-              width={28}
-              height={28}
+              width={103.2}
+              height={32}
             />
           </Link>
         )}
@@ -150,20 +150,14 @@ export function Sidebar() {
             alt=""
             width={18}
             height={18}
-            className={cn(
-              "transition-transform",
-              !showLabels && "rotate-180",
-            )}
+            className={cn("transition-transform", !showLabels && "rotate-180")}
           />
         </button>
       </div>
 
       {/* Actions */}
       <div
-        className={cn(
-          "flex flex-col gap-1 p-2",
-          !showLabels && "items-center",
-        )}
+        className={cn("flex flex-col gap-1 p-2", !showLabels && "items-center")}
       >
         <button
           onClick={handleNewSession}
@@ -178,7 +172,8 @@ export function Sidebar() {
           ) : (
             <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2} />
           )}
-          {showLabels && (createSession.isPending ? "Creating..." : "New session")}
+          {showLabels &&
+            (createSession.isPending ? "Creating..." : "New session")}
         </button>
         <button
           onClick={() => requireAuth(() => setJoinOpen(true))}
@@ -272,8 +267,7 @@ export function Sidebar() {
               {displayName}
             </p>
             <p className="text-xs text-[#9CA3AF]">
-              {sessions.length}{" "}
-              {sessions.length === 1 ? "session" : "sessions"}
+              {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
             </p>
           </div>
         )}

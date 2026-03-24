@@ -9,6 +9,7 @@ import {
   useMemo,
 } from "react";
 import type { SessionDetail, ChatMessage, Participant } from "@/lib/api-types";
+import { trackCodeExecuted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CommandLineIcon, LockIcon } from "@hugeicons/core-free-icons";
@@ -465,12 +466,20 @@ export function SessionPage({
       const data = await res.json();
 
       if (!res.ok) {
+        trackCodeExecuted({ language, success: false });
         setTerminalLines((prev) => [
           ...prev,
           { type: "stderr", text: data.error ?? "Execution failed" },
         ]);
         return;
       }
+
+      trackCodeExecuted({
+        language,
+        success: true,
+        exit_code:
+          typeof data.exitCode === "number" ? data.exitCode : undefined,
+      });
 
       const lines: TerminalLine[] = [
         { type: "system", text: `$ Running ${langLabel}...` },
@@ -501,6 +510,7 @@ export function SessionPage({
         setMobileTab("terminal");
       }
     } catch {
+      trackCodeExecuted({ language, success: false });
       setTerminalLines((prev) => [
         ...prev,
         { type: "stderr", text: "Failed to connect to execution server" },

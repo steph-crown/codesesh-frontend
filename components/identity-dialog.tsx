@@ -11,6 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useUserStore } from "@/stores/user-store";
+import { trackUserCreatedGuest } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { PALETTE } from "@/lib/colors";
 
@@ -40,6 +41,7 @@ export function IdentityDialog() {
     try {
       const user = await api.users.create(trimmed, randomColorName());
       setUser(user.id, user.display_name, user.color);
+      trackUserCreatedGuest();
       setName("");
       resolvePending();
     } catch (err) {

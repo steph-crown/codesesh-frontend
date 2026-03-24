@@ -92,9 +92,8 @@ export function ParticipantAvatarHover({
       >
         <span
           className={cn(
-            "inline-flex rounded-full",
-            isPresent &&
-              "ring-2 ring-[#22c55e] ring-offset-[3px] ring-offset-[#111827]",
+            "inline-flex rounded-full ring-2 ring-offset-[3px] ring-offset-[#111827]",
+            isPresent ? "ring-[#22c55e]" : "ring-white/20",
           )}
         >
           <Avatar size="sm">

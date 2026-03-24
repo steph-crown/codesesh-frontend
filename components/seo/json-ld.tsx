@@ -1,4 +1,5 @@
 import {
+  getOgImageAbsoluteUrl,
   getSiteOrigin,
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -8,6 +9,7 @@ import {
 /** WebSite + Organization + SoftwareApplication for rich results eligibility. */
 export function JsonLdWebsite() {
   const origin = getSiteOrigin();
+  const ogImage = getOgImageAbsoluteUrl();
   const websiteId = `${origin}/#website`;
   const orgId = `${origin}/#organization`;
 
@@ -22,6 +24,7 @@ export function JsonLdWebsite() {
         description: SITE_DESCRIPTION,
         inLanguage: "en-US",
         publisher: { "@id": orgId },
+        image: ogImage,
       },
       {
         "@type": "Organization",
@@ -29,6 +32,8 @@ export function JsonLdWebsite() {
         name: SITE_NAME,
         url: origin,
         description: SITE_TAGLINE,
+        logo: `${origin}/logo-icon.svg`,
+        image: ogImage,
       },
       {
         "@type": "SoftwareApplication",
@@ -36,6 +41,7 @@ export function JsonLdWebsite() {
         description: SITE_DESCRIPTION,
         applicationCategory: "DeveloperApplication",
         operatingSystem: "Web",
+        image: ogImage,
         offers: {
           "@type": "Offer",
           price: "0",
