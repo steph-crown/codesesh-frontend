@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -18,6 +18,7 @@ import { api } from "@/lib/api";
 import { PALETTE } from "@/lib/colors";
 import { generateSessionName } from "@/lib/session-names";
 import { extractSessionCode } from "@/lib/join-code";
+import { useLandingHeroActions } from "./landing-hero-actions-context";
 
 function randomColorName() {
   return PALETTE[Math.floor(Math.random() * PALETTE.length)].name;
@@ -25,14 +26,22 @@ function randomColorName() {
 
 export function HeroSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const userId = useUserStore((s) => s.userId);
   const setUser = useUserStore((s) => s.setUser);
   const createSession = useCreateSession();
+  const { register, unregister } = useLandingHeroActions();
 
   const [displayName, setDisplayName] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinInput, setJoinInput] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("join") !== "1") return;
+    setJoinOpen(true);
+    router.replace("/", { scroll: false });
+  }, [searchParams, router]);
 
   async function handleCreate() {
     if (!userId) {
@@ -80,6 +89,19 @@ export function HeroSection() {
     router.push(`/sessions/${code}`);
   }
 
+  const handleCreateRef = useRef(handleCreate);
+  handleCreateRef.current = handleCreate;
+
+  useEffect(() => {
+    register({
+      createSession: () => {
+        void handleCreateRef.current();
+      },
+      openJoinDialog: () => setJoinOpen(true),
+    });
+    return unregister;
+  }, [register, unregister]);
+
   const isPending = creatingUser || createSession.isPending;
 
   return (
@@ -108,7 +130,7 @@ export function HeroSection() {
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
           )}
-          <div className="flex gap-3">
+          <div id="create-session" className="flex scroll-mt-28 gap-3">
             <Button
               size="lg"
               onClick={handleCreate}
