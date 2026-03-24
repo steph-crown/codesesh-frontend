@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { API_BASE_URL } from "@/lib/api-base-url";
 import { CODE_RUN_SPECS } from "@/lib/code-run-languages";
 import { runWithOneCompiler } from "@/lib/onecompiler-run";
 
@@ -43,8 +44,7 @@ export async function POST(request: Request) {
     });
 
     if (session_id && user_id) {
-      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-      fetch(`${base}/api/runs`, {
+      fetch(`${API_BASE_URL}/api/runs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id, user_id, language }),

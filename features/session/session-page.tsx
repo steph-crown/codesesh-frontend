@@ -497,6 +497,9 @@ export function SessionPage({
       });
 
       setTerminalLines(lines);
+      if (globalThis.window?.matchMedia("(max-width: 767px)")?.matches) {
+        setMobileTab("terminal");
+      }
     } catch {
       setTerminalLines((prev) => [
         ...prev,

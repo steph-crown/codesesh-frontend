@@ -116,7 +116,7 @@ The tracking call **must not** delay the response to the client, whether OneComp
 
 **Base URL:**
 
-- Use the same base as the rest of the app: `process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"` (see [`next.config.ts`](../next.config.ts) rewrites—server-side `fetch` may need the **direct** backend URL, not the browser-relative path).
+- Use the shared constant [`API_BASE_URL`](../lib/api-base-url.ts) from `@/lib/api-base-url` (same value as rewrites in [`next.config.ts`](../next.config.ts)). Server-side `fetch` needs the **direct** backend URL, not the browser-relative path.
 
 ### Order of operations (recommended)
 
