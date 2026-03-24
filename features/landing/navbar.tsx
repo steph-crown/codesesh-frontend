@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,8 +12,12 @@ import {
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GithubIcon, Menu01Icon } from "@hugeicons/core-free-icons";
+import { useLandingHeroActions } from "./landing-hero-actions-context";
 
 export function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { createSession, openJoinDialog } = useLandingHeroActions();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-[72px] px-5 md:px-12 bg-[#FBF6F2]/80 backdrop-blur-md">
       <Link href="/">
@@ -43,7 +48,7 @@ export function Navbar() {
           <HugeiconsIcon icon={GithubIcon} className="size-4" />
           <span className="hidden sm:inline">Star on GitHub</span>
         </a>
-        <Popover>
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
@@ -63,21 +68,30 @@ export function Navbar() {
               <Link
                 href="/my-sessions"
                 className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+                onClick={() => setMenuOpen(false)}
               >
                 My Sessions
               </Link>
-              <Link
-                href="/#create-session"
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+              <button
+                type="button"
+                className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+                onClick={() => {
+                  createSession();
+                  setMenuOpen(false);
+                }}
               >
                 Create Session
-              </Link>
-              <Link
-                href="/?join=1"
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+              </button>
+              <button
+                type="button"
+                className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#F3F0EA]"
+                onClick={() => {
+                  openJoinDialog();
+                  setMenuOpen(false);
+                }}
               >
                 Join Session
-              </Link>
+              </button>
             </nav>
           </PopoverContent>
         </Popover>

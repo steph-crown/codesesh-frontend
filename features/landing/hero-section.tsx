@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -18,6 +18,7 @@ import { api } from "@/lib/api";
 import { PALETTE } from "@/lib/colors";
 import { generateSessionName } from "@/lib/session-names";
 import { extractSessionCode } from "@/lib/join-code";
+import { useLandingHeroActions } from "./landing-hero-actions-context";
 
 function randomColorName() {
   return PALETTE[Math.floor(Math.random() * PALETTE.length)].name;
@@ -29,6 +30,7 @@ export function HeroSection() {
   const userId = useUserStore((s) => s.userId);
   const setUser = useUserStore((s) => s.setUser);
   const createSession = useCreateSession();
+  const { register, unregister } = useLandingHeroActions();
 
   const [displayName, setDisplayName] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
@@ -86,6 +88,19 @@ export function HeroSection() {
     setJoinInput("");
     router.push(`/sessions/${code}`);
   }
+
+  const handleCreateRef = useRef(handleCreate);
+  handleCreateRef.current = handleCreate;
+
+  useEffect(() => {
+    register({
+      createSession: () => {
+        void handleCreateRef.current();
+      },
+      openJoinDialog: () => setJoinOpen(true),
+    });
+    return unregister;
+  }, [register, unregister]);
 
   const isPending = creatingUser || createSession.isPending;
 
