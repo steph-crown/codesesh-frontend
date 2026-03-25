@@ -8,11 +8,13 @@ import {
   useEffect,
   useMemo,
 } from "react";
+import Image from "next/image";
 import type { SessionDetail, ChatMessage, Participant } from "@/lib/api-types";
 import { trackCodeExecuted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CommandLineIcon, LockIcon } from "@hugeicons/core-free-icons";
+import { useSidebar } from "@/hooks/use-sidebar";
 import { toast } from "sonner";
 import { useParticipants, useMessages } from "@/hooks/use-sessions";
 import { useUserStore } from "@/stores/user-store";
@@ -105,6 +107,7 @@ function MobileTabBar({
   active: MobileTab;
   onChange: (tab: MobileTab) => void;
 }) {
+  const { setMobileOpen } = useSidebar();
   const tabs: { id: MobileTab; label: string }[] = [
     { id: "editor", label: "Editor" },
     { id: "terminal", label: "Terminal" },
@@ -113,6 +116,20 @@ function MobileTabBar({
 
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 border-b border-white/5 bg-[#111827] px-2 md:hidden">
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className="flex shrink-0 items-center justify-center rounded-md p-1 text-white transition-colors hover:bg-white/10"
+        aria-label="Open navigation"
+      >
+        <Image
+          src="/collapse.svg"
+          alt=""
+          width={18}
+          height={18}
+          className="rotate-180 brightness-0 invert"
+        />
+      </button>
       {tabs.map((tab) => (
         <button
           key={tab.id}

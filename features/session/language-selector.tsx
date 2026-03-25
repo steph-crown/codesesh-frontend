@@ -65,7 +65,19 @@ export function LanguageSelector({
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 z-50 mt-1 grid w-max grid-cols-3 gap-x-1 rounded-lg border border-white/10 bg-[#111827] p-1.5 shadow-lg">
+        <>
+          <div
+            className="fixed inset-0 z-[80] bg-black/50 md:hidden"
+            aria-hidden
+            onClick={() => setOpen(false)}
+          />
+          <div
+            className={cn(
+              "z-[90] grid max-h-[min(85vh,28rem)] w-[min(calc(100vw-2rem),22rem)] grid-cols-3 gap-x-1 overflow-y-auto rounded-lg border border-white/10 bg-[#111827] p-1.5 shadow-lg",
+              "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+              "md:absolute md:top-full md:left-0 md:mt-1 md:max-h-none md:w-max md:translate-x-0 md:translate-y-0",
+            )}
+          >
           {[col1, col2, col3].map((col, ci) => (
             <div key={ci} className="flex flex-col">
               {col.map((lang) => (
@@ -98,7 +110,8 @@ export function LanguageSelector({
               ))}
             </div>
           ))}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
