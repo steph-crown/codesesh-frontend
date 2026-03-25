@@ -8,11 +8,22 @@ import { FeaturesSection } from "@/features/landing/features-section";
 import { HowItWorks } from "@/features/landing/how-it-works";
 import { Footer } from "@/features/landing/footer";
 import {
+  getOgImageAbsoluteUrl,
   getSiteOrigin,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_TAGLINE,
 } from "@/lib/site-config";
+
+const ogImage = {
+  url: getOgImageAbsoluteUrl(),
+  width: OG_IMAGE_WIDTH,
+  height: OG_IMAGE_HEIGHT,
+  alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
+  type: "image/png" as const,
+};
 
 export const metadata: Metadata = {
   title: { absolute: `${SITE_NAME} — Collaborative coding in real time` },
@@ -22,10 +33,18 @@ export const metadata: Metadata = {
     url: getSiteOrigin(),
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
+    images: [ogImage],
   },
   twitter: {
+    card: "summary_large_image",
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
+    images: {
+      url: ogImage.url,
+      width: ogImage.width,
+      height: ogImage.height,
+      alt: ogImage.alt,
+    },
   },
 };
 
