@@ -104,9 +104,9 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     statusBarStyle: "default",
   },
+  /** Favicon + Apple: `app/icon.svg` → `/icon.svg`. `public/logo-icon.svg` remains for in-app `<img>` / sidebar. */
   icons: {
-    icon: [{ url: "/logo-icon.svg", type: "image/svg+xml" }],
-    apple: "/logo-icon.svg",
+    apple: "/icon.svg",
   },
 };
 
