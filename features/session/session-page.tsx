@@ -28,7 +28,7 @@ import { ChatPanel } from "./chat-panel";
 import { NotesPanel } from "./notes-panel";
 import { LANGUAGES } from "./language-selector";
 
-type MobileTab = "editor" | "terminal" | "chat";
+type MobileTab = "editor" | "terminal" | "chat" | "notes";
 
 const H_KEY = "codesesh_h_split";
 const V_KEY = "codesesh_v_split";
@@ -112,10 +112,11 @@ function MobileTabBar({
     { id: "editor", label: "Editor" },
     { id: "terminal", label: "Terminal" },
     { id: "chat", label: "Chat" },
+    { id: "notes", label: "Notes" },
   ];
 
   return (
-    <div className="flex h-9 shrink-0 items-center gap-1 border-b border-white/5 bg-[#111827] px-2 md:hidden">
+    <div className="flex h-9 shrink-0 items-center gap-0.5 border-b border-white/5 bg-[#111827] px-1 md:hidden">
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
@@ -130,20 +131,23 @@ function MobileTabBar({
           className="rotate-180 brightness-0 invert"
         />
       </button>
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onChange(tab.id)}
-          className={cn(
-            "rounded-md px-3 py-1 text-xs font-medium transition-colors",
-            active === tab.id
-              ? "bg-white/10 text-[#F9FAFB]"
-              : "text-[#6B7280] hover:text-[#9CA3AF]",
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
+      <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            className={cn(
+              "shrink-0 rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors sm:px-3 sm:text-xs",
+              active === tab.id
+                ? "bg-white/10 text-[#F9FAFB]"
+                : "text-[#6B7280] hover:text-[#9CA3AF]",
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -633,6 +637,9 @@ export function SessionPage({
             onSend={handleSendMessage}
             disabled={readOnlyCombined}
           />
+        )}
+        {mobileTab === "notes" && (
+          <NotesPanel sessionId={sessionId} />
         )}
       </div>
 
