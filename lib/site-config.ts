@@ -30,10 +30,16 @@ function normalizeSiteUrl(raw: string): string {
   return t || DEFAULT_DEV_ORIGIN;
 }
 
-/** Absolute origin for metadataBase and structured data (no trailing slash). */
 export function getSiteOrigin(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (fromEnv) return normalizeSiteUrl(fromEnv);
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return normalizeSiteUrl(explicit);
+
+  const netlifyUrl = process.env.URL?.trim();
+  if (netlifyUrl) return normalizeSiteUrl(netlifyUrl);
+
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) return normalizeSiteUrl(`https://${vercelUrl}`);
+
   return DEFAULT_DEV_ORIGIN;
 }
 
