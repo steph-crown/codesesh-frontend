@@ -72,10 +72,10 @@ export function SessionCard({
           <h3 className="truncate text-base font-semibold text-[#0A0A0A]">
             {session.name}
           </h3>
-          <div className="mt-1.5 flex items-center gap-2">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <span className="flex items-center gap-1 text-xs text-[#9CA3AF]">
               <HugeiconsIcon icon={visConfig.icon} size={12} strokeWidth={2} />
-              {visConfig.label}
+              <span className="hidden sm:inline">{visConfig.label}</span>
             </span>
             <span className="text-[#D1D5DB]">&middot;</span>
             <span className="text-xs text-[#9CA3AF]">
@@ -115,7 +115,7 @@ export function SessionCard({
                 e.preventDefault();
                 e.stopPropagation();
               }}
-              className="-m-1.5 rounded-md p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
+              className="-m-1.5 rounded-md p-1.5 text-[#0A0A0A] opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
             >
               <HugeiconsIcon
                 icon={MoreVerticalIcon}
