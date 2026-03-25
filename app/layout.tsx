@@ -10,9 +10,9 @@ import { QueryProvider } from "@/providers/query-provider";
 import { IdentityDialog } from "@/components/identity-dialog";
 import {
   getMetadataBase,
+  getOgImageAbsoluteUrl,
   getSiteOrigin,
   OG_IMAGE_HEIGHT,
-  OG_IMAGE_PATH,
   OG_IMAGE_WIDTH,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     url: siteOrigin,
     images: [
       {
-        url: OG_IMAGE_PATH,
+        url: getOgImageAbsoluteUrl(),
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,
         alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
     images: {
-      url: OG_IMAGE_PATH,
+      url: getOgImageAbsoluteUrl(),
       width: OG_IMAGE_WIDTH,
       height: OG_IMAGE_HEIGHT,
       alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
